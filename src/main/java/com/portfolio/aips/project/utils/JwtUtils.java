@@ -1,6 +1,7 @@
 package com.portfolio.aips.project.utils;
 
 
+import com.portfolio.aips.project.social.provider.enums.TokenStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -20,23 +21,37 @@ public class JwtUtils {
     private final SecretKey secretKey;
 
 
-    public final int JWT_EXPIRED_TIME;
+    public final int REFRESH_TOKEN_EXPIRATION;
+    public final int ACCESS_TOKEN_EXPIRATION;
 
 
-
-    public JwtUtils(@Value("${spring.jwt.secret}") String secret, @Value("${spring.jwt.access-token-expiration}") int JWT_EXPIRED_TIME) {
+    public JwtUtils(@Value("${spring.jwt.secret}") String secret, @Value("${spring.jwt.refresh-token-expiration}") int REFRESH_TOKEN_EXPIRATION, @Value("${spring.jwt.access-token-expiration}") int ACCESS_TOKEN_EXPIRATION) {
         this.secretKey = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), Jwts.SIG.HS256.key().build().getAlgorithm());
-        this.JWT_EXPIRED_TIME = JWT_EXPIRED_TIME;
+        this.REFRESH_TOKEN_EXPIRATION = REFRESH_TOKEN_EXPIRATION;
+        this.ACCESS_TOKEN_EXPIRATION = ACCESS_TOKEN_EXPIRATION;
     }
 
-    public Object getJWTExpiredTime(Object type)
+    public <T> T getJWTExpiredTime(String tokenType, Class<T> requiredType)
     {
-        if(type == Instant.class) {
-            return Instant.now().plusSeconds(JWT_EXPIRED_TIME);
+        int expirationSeconds = getExpirationSeconds(tokenType);
+
+        if(requiredType == Instant.class) {
+            return requiredType.cast(Instant.now().plusSeconds(expirationSeconds));
         }
-        else{
-            return JWT_EXPIRED_TIME;
+
+        if(requiredType == int.class) {
+            return requiredType.cast(REFRESH_TOKEN_EXPIRATION);
         }
+
+        throw new JwtException("Invalid token type or required type: " + requiredType.getSimpleName());
+    }
+
+    private int getExpirationSeconds(String tokenType) {
+        return switch (tokenType) {
+            case "refresh_token" -> REFRESH_TOKEN_EXPIRATION;
+            case "access_token" -> ACCESS_TOKEN_EXPIRATION;
+            default -> throw new JwtException("Invalid token type: " + tokenType);
+        };
     }
 
 
@@ -64,28 +79,20 @@ public class JwtUtils {
 
 
 
-
-
-
-
-
-    public String createJwt(String principalName, String provider, String accessToken, Instant expiresAt) {
+    public String createJwt(String principalName, String provider, Instant expiresAt) {
 
         return Jwts.builder()
                 .claim("principalName", principalName)
                 .claim("provider", provider)
-                .claim("accessToken", accessToken)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String createJwt(String principalName, String provider, String accessToken,  Date expiresAt) {
+    public String createJwt(String accessToken,  Date expiresAt) {
 
         return Jwts.builder()
-                .claim("principalName", principalName)
-                .claim("provider", provider)
                 .claim("accessToken", accessToken)
                 .claim("accessTokenReissueAt", expiresAt)
                 .issuedAt(new Date(System.currentTimeMillis()))
@@ -94,29 +101,12 @@ public class JwtUtils {
                 .compact();
     }
 
-    public boolean validateWithJwtIssuedAt(String token) {
-        Claims claims = Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
 
-        Date issuedAt = claims.getIssuedAt();
 
-        if (issuedAt == null) {
-            return false; // issuedAt이 없으면 판별 불가 (또는 false 처리)
-        }
-
-        long tenMinutesInMillis = 10 * 60 * 1000;
-        long now = System.currentTimeMillis();
-
-        return now - issuedAt.getTime() >= tenMinutesInMillis;
-    }
-
-    public Boolean validateWithClaims(String token) {
+    public TokenStatus validateWithClaims(String token) {
         try {
             if (token == null || token.trim().isEmpty()) {
-                return false;
+                return TokenStatus.NOT_EXISTS;
             }
 
             Claims claims = Jwts.parser()
@@ -127,18 +117,21 @@ public class JwtUtils {
 
             // 기본 검증
             if (claims.getExpiration().before(new Date())) {
-                return false;
+                return TokenStatus.UPDATE;
             }
 
             // 필수 클레임 존재 여부 확인
             String principalName = claims.get("principalName", String.class);
             String provider = claims.get("provider", String.class);
 
-            return principalName != null && !principalName.trim().isEmpty() &&
-                    provider != null && !provider.trim().isEmpty();
+            return (principalName != null && !principalName.trim().isEmpty() &&
+                    provider != null && !provider.trim().isEmpty())
+                    ? TokenStatus.VALID
+                    : TokenStatus.NOT_EXISTS;
 
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+
+            return TokenStatus.ERROR;
         }
     }
 

@@ -1,9 +1,9 @@
 package com.portfolio.aips.project.config.security.handler;
 
-import com.portfolio.aips.project.token.validator.TokenValidator;
+import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
 import com.portfolio.aips.project.utils.CookieUtils;
 import com.portfolio.aips.project.utils.JwtUtils;
-import com.portfolio.aips.project.users.dto.request.SaveUserTokenRequest;
+import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
 import com.portfolio.aips.project.users.service.UserService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -23,7 +22,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Objects;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -57,36 +56,45 @@ public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
 
         if(client != null) {
             log.info("실행");
-            String refreshToken = Objects.requireNonNull(client.getRefreshToken()).getTokenValue();
-
-            String beanName = provider + "TokenValidator";
-            TokenValidator validator = applicationContext.getBean(beanName, TokenValidator.class);
-
-            //로그인 시 새로운 액세스 토큰을 발급받아 다른 환경에서 자동 로그인 해제됨
-            String accessToken = validator.validateAndGetAccessToken(refreshToken).getNewAccessToken();
 
 
 
+            String deviceId = UUID.randomUUID().toString();
 
-            SaveUserTokenRequest userTokenRequest = new SaveUserTokenRequest(principalName, provider,
-                    refreshToken, accessToken, (Instant) jwtUtils.getJWTExpiredTime(Instant.class)
-            );
-
-            userService.saveOrUpdateTokenProc(userTokenRequest);
-
-            String jwtToken = jwtUtils.createJwt(principalName, provider, accessToken, (Instant) jwtUtils.getJWTExpiredTime(Instant.class));
+            assert client.getRefreshToken() != null;
+            String socialRefreshToken = client.getRefreshToken().getTokenValue();
 
 
+            SaveSocialUserInfoRequestDTO userTokenReq = new SaveSocialUserInfoRequestDTO(principalName, provider, socialRefreshToken);
+            String refreshToken = jwtUtils.createJwt(principalName, provider, jwtUtils.getJWTExpiredTime("refresh_token", Instant.class));
 
-            Cookie jwtCookie = cookieUtils.getCookie("access_token", jwtToken, "/", (Integer) jwtUtils.getJWTExpiredTime(Integer.class));
+            String userAgent = request.getHeader("User-Agent");
+            log.info("userAgent: {}", userAgent);
+            SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq = getSaveSocialRefreshTokenInfoRequest(deviceId, refreshToken, userAgent);
+            userService.saveProc(userTokenReq, refreshTokenReq);
 
-            response.addCookie(jwtCookie);
+            String accessToken = jwtUtils.createJwt(principalName, provider, jwtUtils.getJWTExpiredTime("access_token", Instant.class));
 
+            Cookie refreshTokenCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", int.class));
+            Cookie deviceIdCookie = cookieUtils.getCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", int.class));
+            
+            response.addCookie(refreshTokenCookie);
+            response.addCookie(deviceIdCookie);
+            response.setHeader("Authorization", "Bearer " + accessToken);
 
             response.sendRedirect("/login");
-
         }
 
 
+    }
+
+    private SaveSocialRefreshTokenInfoRequestDTO getSaveSocialRefreshTokenInfoRequest(String deviceId, String refreshToken, String userAgent)
+    {
+        return new SaveSocialRefreshTokenInfoRequestDTO(
+                deviceId,
+                refreshToken,
+                userAgent,
+                jwtUtils.getJWTExpiredTime("refresh_token", Instant.class)
+        );
     }
 }

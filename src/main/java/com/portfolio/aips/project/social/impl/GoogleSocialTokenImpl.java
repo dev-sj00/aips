@@ -1,9 +1,9 @@
-package com.portfolio.aips.project.token.impl;
+package com.portfolio.aips.project.social.impl;
 
-import com.portfolio.aips.project.token.validator.TokenValidator;
-import com.portfolio.aips.project.token.validator.dto.GoogleTokenResponseDTO;
-import com.portfolio.aips.project.token.validator.dto.TokenValidationResultDTO;
-import com.portfolio.aips.project.token.validator.enums.TokenStatus;
+import com.portfolio.aips.project.social.provider.SocialTokenProvider;
+import com.portfolio.aips.project.social.provider.dto.GoogleTokenResponseDTO;
+import com.portfolio.aips.project.social.provider.dto.SocialTokenValidationResultDTO;
+import com.portfolio.aips.project.social.provider.enums.TokenStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -18,11 +18,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Objects;
+
 
 @Service("googleTokenValidator")
 @Slf4j
-public class GoogleTokenImpl implements TokenValidator{
+public class GoogleSocialTokenImpl implements SocialTokenProvider {
 
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
@@ -36,7 +36,7 @@ public class GoogleTokenImpl implements TokenValidator{
 
 
 
-    public TokenValidationResultDTO  validateAndGetAccessToken(String refreshToken) {
+    public SocialTokenValidationResultDTO refreshAccessToken(String refreshToken) {
 
         try {
             String url = "https://oauth2.googleapis.com/token";
@@ -60,20 +60,24 @@ public class GoogleTokenImpl implements TokenValidator{
                     url, HttpMethod.POST, request, GoogleTokenResponseDTO.class
             );
 
+
+
             if (response.getStatusCode() == HttpStatus.OK &&
                     response.getBody() != null &&
                     response.getBody().getAccessToken() != null) {
-
-                return new TokenValidationResultDTO(TokenStatus.VALID, "유효한 토큰", response.getBody().getAccessToken());
+                log.info("response get Body {}", response.getBody());
+                return new SocialTokenValidationResultDTO(TokenStatus.VALID, "유효한 토큰", response.getBody().getAccessToken());
             } else {
-                return new TokenValidationResultDTO(TokenStatus.ERROR, "토큰 응답 오류");
+                return new SocialTokenValidationResultDTO(TokenStatus.ERROR, "토큰 응답 오류");
             }
 
         } catch (HttpClientErrorException e) {
             // 예외 처리...
-            return new TokenValidationResultDTO(TokenStatus.Failed, "토큰 검증 실패");
+            return new SocialTokenValidationResultDTO(TokenStatus.Failed, "토큰 검증 실패");
         }
     }
+
+
 
 
 }

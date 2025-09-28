@@ -1,8 +1,9 @@
 package com.portfolio.aips.project.users.service;
 
-import com.portfolio.aips.project.users.dto.request.SaveUserTokenRequest;
+import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
+import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
 
 public interface UserService {
 
-    void saveOrUpdateTokenProc(SaveUserTokenRequest saveUserTokenRequest);
+    void saveProc(SaveSocialUserInfoRequestDTO saveUserTokenRequest, SaveSocialRefreshTokenInfoRequestDTO saveSocialRefreshTokenInfoRequestDTO);
 }

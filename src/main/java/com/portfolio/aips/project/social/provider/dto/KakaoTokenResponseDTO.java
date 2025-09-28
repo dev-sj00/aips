@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.token.validator.dto;
+package com.portfolio.aips.project.social.provider.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;

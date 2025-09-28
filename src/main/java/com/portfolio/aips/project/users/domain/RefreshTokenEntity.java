@@ -11,38 +11,31 @@ import java.time.Instant;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "social_login_info")
-public class SocialLoginInfo {
+@Table(name = "refresh_token")
+public class RefreshTokenEntity {
 
 
-    @Column(name = "sc_pk")
+    @Column(name = "rt_pk")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pk;
 
 
-
-    @OneToOne(mappedBy = "scInfo", optional = false)
-    UsersEntity usersEntity;
-
-    @Column(nullable = false)
-    private String principalName;
-
-    @Column(name = "provider", length = 50, nullable = false)
-    private String provider;
+    @Column(name = "device_id", nullable = false)
+    private String deviceId;
 
     @Column(name = "refresh_token", length = 500, nullable = false)
     private String refreshToken;
 
-    @Column(name = "access_token", length = 500, nullable = false)
-    private String accessToken;
+    @Column(name = "user_agent", columnDefinition = "TEXT")
+    private String userAgent;
 
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "refresh_token")
+    UsersEntity usersEntity;
 
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
-
-
-
 
     public boolean isExpired() {
         if (refreshToken == null || refreshToken.trim().isEmpty()) {
@@ -56,14 +49,11 @@ public class SocialLoginInfo {
         return Instant.now().isAfter(expiresAt);
     }
 
-    public boolean isEqualExpired(Instant newExpired) {
+    public boolean isEquals(String refreshToken) {
 
-        return expiresAt.equals(newExpired);
+        return refreshToken.equals(this.refreshToken);
     }
 
-    public boolean isValidAccessToken(String jwtAccessToken) {
 
-        return jwtAccessToken != null && jwtAccessToken.equals(this.accessToken);
-    }
 
 }

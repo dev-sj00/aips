@@ -1,10 +1,11 @@
-package com.portfolio.aips.project.token.impl;
+package com.portfolio.aips.project.social.impl;
 
 
-import com.portfolio.aips.project.token.validator.TokenValidator;
-import com.portfolio.aips.project.token.validator.dto.NaverTokenResponseDTO;
-import com.portfolio.aips.project.token.validator.dto.TokenValidationResultDTO;
-import com.portfolio.aips.project.token.validator.enums.TokenStatus;
+import com.portfolio.aips.project.social.provider.SocialTokenProvider;
+import com.portfolio.aips.project.social.provider.dto.NaverTokenResponseDTO;
+import com.portfolio.aips.project.social.provider.dto.SocialTokenValidationResultDTO;
+import com.portfolio.aips.project.social.provider.enums.TokenStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -14,7 +15,8 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service("naverTokenValidator")
-public class NaverTokenImpl implements TokenValidator{
+@Slf4j
+public class NaverSocialTokenImpl implements SocialTokenProvider {
 
     @Value("${spring.security.oauth2.client.registration.naver.client-id}")
     private String naverClientId;
@@ -24,7 +26,7 @@ public class NaverTokenImpl implements TokenValidator{
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public TokenValidationResultDTO validateAndGetAccessToken(String refreshToken) {
+    public SocialTokenValidationResultDTO refreshAccessToken(String refreshToken) {
 
         try {
 
@@ -49,15 +51,18 @@ public class NaverTokenImpl implements TokenValidator{
                     response.getBody() != null &&
                     response.getBody().getAccessToken() != null) {
 
-                return new TokenValidationResultDTO(TokenStatus.VALID, "유효한 토큰", response.getBody().getAccessToken());
+
+                return new SocialTokenValidationResultDTO(TokenStatus.VALID, "유효한 토큰", response.getBody().getAccessToken());
             } else {
-                return new TokenValidationResultDTO(TokenStatus.ERROR, "토큰 응답 오류");
+                return new SocialTokenValidationResultDTO(TokenStatus.ERROR, "토큰 응답 오류");
             }
 
         } catch (HttpClientErrorException e) {
-            return new TokenValidationResultDTO(TokenStatus.Failed, "토큰 검증 실패");
+            return new SocialTokenValidationResultDTO(TokenStatus.Failed, "토큰 검증 실패");
         }
     }
+
+
 
 
 }

@@ -8,6 +8,8 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -28,10 +30,15 @@ public class UsersEntity {
     private String nickname;
 
 
+    @Column(name="principal_name", nullable = false)
+    private String principalName;
+
+    @Column(name = "provider", length = 50, nullable = false)
+    private String provider;
+
+
+    @Column(name = "profile_image_url")
     private String profileImageUrl;
-
-
-
 
     @Column(length = 30)
     @Enumerated(EnumType.STRING)
@@ -46,15 +53,24 @@ public class UsersEntity {
 
 
     @CreatedDate
+    @Column(name = "created_date_time")
     private LocalDateTime createdDateTime;
 
     @LastModifiedDate
+    @Column(name = "updated_date_time")
     private LocalDateTime updatedDateTime;
 
 
-    @OneToOne
-    @JoinColumn(name = "sc_info")
-    private SocialLoginInfo scInfo;
+    @OneToMany(mappedBy = "usersEntity", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<RefreshTokenEntity> refreshTokenEntity = new ArrayList<>();
+
+    @Column(name = "social_refresh_token")
+    private String socialRefreshToken;
+
+    public void addRefreshToken(RefreshTokenEntity refreshTokenEntity) {
+        this.refreshTokenEntity.add(refreshTokenEntity);
+        refreshTokenEntity.setUsersEntity(this);
+    }
 
 
 

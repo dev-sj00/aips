@@ -1,10 +1,10 @@
-package com.portfolio.aips.project.token.impl;
+package com.portfolio.aips.project.social.impl;
 
 
-import com.portfolio.aips.project.token.validator.TokenValidator;
-import com.portfolio.aips.project.token.validator.dto.KakaoTokenResponseDTO;
-import com.portfolio.aips.project.token.validator.dto.TokenValidationResultDTO;
-import com.portfolio.aips.project.token.validator.enums.TokenStatus;
+import com.portfolio.aips.project.social.provider.SocialTokenProvider;
+import com.portfolio.aips.project.social.provider.dto.KakaoTokenResponseDTO;
+import com.portfolio.aips.project.social.provider.dto.SocialTokenValidationResultDTO;
+import com.portfolio.aips.project.social.provider.enums.TokenStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service("kakaoTokenValidator")
 @Slf4j
-public class KakaoTokenImpl implements TokenValidator{
+public class KakaoSocialTokenImpl implements SocialTokenProvider {
 
     @Value("${spring.security.oauth2.client.registration.kakao.client-id}")
     private String kakaoClientId;
@@ -25,7 +25,7 @@ public class KakaoTokenImpl implements TokenValidator{
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    public TokenValidationResultDTO validateAndGetAccessToken(String refreshToken) {
+    public SocialTokenValidationResultDTO refreshAccessToken(String refreshToken) {
 
         try {
 
@@ -50,16 +50,18 @@ public class KakaoTokenImpl implements TokenValidator{
                     response.getBody() != null &&
                     response.getBody().getAccessToken() != null) {
                 log.info("유효한 토큰");
-                return new TokenValidationResultDTO(TokenStatus.VALID, "유효한 토큰", response.getBody().getAccessToken());
+                return new SocialTokenValidationResultDTO(TokenStatus.VALID, "유효한 토큰", response.getBody().getAccessToken());
             } else {
-                return new TokenValidationResultDTO(TokenStatus.ERROR, "토큰 응답 오류");
+                return new SocialTokenValidationResultDTO(TokenStatus.ERROR, "토큰 응답 오류");
             }
 
         } catch (HttpClientErrorException e) {
             log.error(e.getMessage());
-            return new TokenValidationResultDTO(TokenStatus.Failed, "토큰 검증 실패");
+            return new SocialTokenValidationResultDTO(TokenStatus.Failed, "토큰 검증 실패");
         }
     }
+
+
 
 
 }

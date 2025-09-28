@@ -1,11 +1,15 @@
 package com.portfolio.aips.project.config.security.filter;
 
-import com.portfolio.aips.project.token.validator.enums.TokenStatus;
+
+import com.portfolio.aips.project.users.domain.RefreshTokenEntity;
+import com.portfolio.aips.project.users.dto.TokenPairDTO;
+import com.portfolio.aips.project.users.repo.RefreshTokenRepository;
+
 import com.portfolio.aips.project.utils.CookieUtils;
 import com.portfolio.aips.project.utils.JwtUtils;
-import com.portfolio.aips.project.token.validator.dto.TokenValidationResultDTO;
+import com.portfolio.aips.project.social.provider.dto.SocialTokenValidationResultDTO;
 import com.portfolio.aips.project.users.service.CustomUserDetailService;
-import com.portfolio.aips.project.token.service.TokenService;
+import com.portfolio.aips.project.social.service.SocialTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -22,9 +26,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Map;
-
-
+import java.util.List;
+import java.util.Optional;
 
 
 @Component
@@ -33,60 +36,78 @@ import java.util.Map;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtils jwtUtils;
     private final CustomUserDetailService customUserDetailService;
-    private final TokenService tokenService;
+    private final SocialTokenService socialTokenService;
     private final CookieUtils cookieUtils;
+    private final RefreshTokenRepository refreshTokenRepository;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
 
-        log.info("JWT AuthenticationFilter request uri: {}", request.getRequestURI());
-        String token = cookieUtils.extractCookieToken(request, "access_token");
-        Cookie expiredCookie = cookieUtils.getCookie("access_token", null, "/", 0);
+        //access token 가져오기
+        String authHeader = request.getHeader("Authorization");
+        String accessToken = extractAccessTokenFromAuthorizationHeader(authHeader);
+
+        String refreshToken = cookieUtils.extractCookieToken(request, "refresh_token");
+
+        Cookie expiredCookie = cookieUtils.getCookie("refresh_token", null, "/", 0);
+        String deviceId = cookieUtils.extractCookieToken(request, "device_id");
+
+        if(refreshToken != null) {
 
 
+            if(accessToken == null || jwtUtils.getExpired(accessToken).before(new Date()))
+            {
 
-
-        String path = request.getRequestURI();
-
-
-
-
-            if (token == null || !jwtUtils.validateWithClaims(token)) {
-                response.addCookie(expiredCookie);
-            } else {
-
-                TokenValidationResultDTO resultDTO = validateToken(token); // 쿼리 날림
-
-                log.info("Token Status: {}", resultDTO.getStatus());
-
-                Map<TokenStatus, Runnable> actionMap = Map.of(
-                        TokenStatus.VALID, () -> createAuthentication(token),
-                        TokenStatus.UPDATE, () -> {
-                            String principalName = jwtUtils.getPrincipalName(token);
-                            String provider = jwtUtils.getProvider(token);
-                            Date expired = jwtUtils.getExpired(token);
-                            String updatedToken = jwtUtils.createJwt(principalName, provider, resultDTO.getNewAccessToken(), expired);
-                            response.addCookie(cookieUtils.getCookie("access_token", updatedToken, "/", (Integer) jwtUtils.getJWTExpiredTime(Integer.class)));
-                            createAuthentication(token); // 여기서 또 날림 1차 캐시 없누
-                        }
-
-                );
-
-                actionMap.getOrDefault(resultDTO.getStatus(), () -> {
-                    log.error(resultDTO.getMessage());
-                    SecurityContextHolder.clearContext();
-                    response.addCookie(expiredCookie);
-                    throw new RuntimeException(resultDTO.getMessage());
-                }).run();
-
+                TokenPairDTO tokenPairDTO = refreshTokenRotation(accessToken, refreshToken);
+                response.setHeader("Authorization", "Bearer " + reissueAccessToken);
             }
 
 
-
-
+        }
 
         filterChain.doFilter(request, response);
+    }
+
+    private TokenPairDTO refreshTokenRotation(String deviceId, String refreshToken)
+    {
+
+        Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findByDeviceId(deviceId);
+        if(refreshTokenEntityOpt.isEmpty())
+        {
+            throw new RuntimeException("Refresh token entity not found");
+        }
+
+        RefreshTokenEntity refreshTokenEntity = refreshTokenEntityOpt.get();
+
+        if(!refreshTokenEntity.isExpired() && refreshTokenEntity.isEquals(refreshToken))
+        {
+            String principalName = jwtUtils.getPrincipalName(refreshToken);
+            String provider = jwtUtils.getProvider(refreshToken);
+
+
+            String newAccessToken = jwtUtils.createJwt(principalName, provider, jwtUtils.getJWTExpiredTime("access_token", Instant.class));
+            String newRefreshToken = jwtUtils.createJwt(principalName, provider, jwtUtils.getJWTExpiredTime("refresh_token", Instant.class));
+
+            return new TokenPairDTO(newAccessToken, newRefreshToken);
+        }
+
+        throw new RuntimeException("Refresh token expired or invalid");
+    }
+
+
+
+
+    private String extractAccessTokenFromAuthorizationHeader(String authHeader)
+    {
+
+        if(authHeader.startsWith("Bearer ")){
+        String token = authHeader.substring(7);
+        log.info("JWT AuthenticationFilter token: {}", token);
+        return token;
+        }else{
+            return null;
+        }
     }
 
 
@@ -96,16 +117,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void createAuthentication(String token) {
         String principalName = jwtUtils.getPrincipalName(token);
         String provider = jwtUtils.getProvider(token);
-        UserDetails userDetails = customUserDetailService.loadUserByPrincipalNameAndProvider(principalName, provider);
+        UserDetails userDetails = customUserDetailService.loadSocialUserByPrincipalNameAndProvider(principalName, provider);
         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
         SecurityContextHolder.getContext().setAuthentication(authToken);
 
     }
 
- private TokenValidationResultDTO validateToken(String token) {
+ private SocialTokenValidationResultDTO validateToken(String token, HttpServletRequest request) {
 
+        List<String> userInfo =   cookieUtils.extractCookieTokenWithSplitting(request, "userInfo", "_");
+        String principalName = userInfo.get(0);
+        String provider = userInfo.get(1);
 
-        return tokenService.validateAccessToken(token);
+        return socialTokenService.validateAccessToken(token, principalName, provider);
 
     }
 

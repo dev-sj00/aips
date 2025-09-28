@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.List;
 
 @Component
 @Slf4j
@@ -33,7 +35,26 @@ public class CookieUtils {
             }
         }
 
+
         log.info("empty Cookie");
         return null;
     }
+
+    public List<String> extractCookieTokenWithSplitting(HttpServletRequest request, String extractCookieName, String separator) {
+
+        if(request.getCookies() == null) {
+            log.info("empty Cookie");
+            return null;
+        }
+        for (Cookie cookie : request.getCookies()) {
+            if(extractCookieName.equals(cookie.getName())) {
+                return Arrays.asList(cookie.getValue().split(separator));
+            }
+        }
+
+
+
+        return null;
+    }
+
 }

@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.token.validator.enums;
+package com.portfolio.aips.project.social.provider.enums;
 
 public enum TokenStatus {
     VALID,        // 유효한 토큰
