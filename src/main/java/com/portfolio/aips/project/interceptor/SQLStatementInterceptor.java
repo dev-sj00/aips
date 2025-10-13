@@ -20,18 +20,6 @@ public class SQLStatementInterceptor implements StatementInspector {
 
                 log.info("SQL called from: " + element);
 
-                String formattedSql = sql
-                        .replaceAll("(?i)SELECT ", "\nSELECT ")
-                        .replaceAll("(?i)INSERT ", "\nINSERT ")
-                        .replaceAll("(?i)UPDATE ", "\nUPDATE ")
-                        .replaceAll("(?i)DELETE ", "\nDELETE ")
-                        .replaceAll("(?i)FROM ", "\nFROM ")
-                        .replaceAll("(?i)WHERE ", "\nWHERE ")
-                        .replaceAll("(?i)JOIN ", "\nJOIN ")
-                        .replaceAll("(?i)AND ", "\nAND ")
-                        .replaceAll("(?i)ORDER BY ", "\nORDER BY ")
-                        .replaceAll("(?i)GROUP BY ", "\nGROUP BY ");
-                log.info("SQL: {}", formattedSql);
                 break;
             }
         }

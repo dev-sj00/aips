@@ -6,6 +6,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.Date;
 
 @Component
+@Slf4j
 public class JwtUtils {
 
     private final SecretKey secretKey;
@@ -39,7 +41,7 @@ public class JwtUtils {
             return requiredType.cast(Instant.now().plusSeconds(expirationSeconds));
         }
 
-        if(requiredType == int.class) {
+        if(requiredType == Integer.class) {
             return requiredType.cast(REFRESH_TOKEN_EXPIRATION);
         }
 
@@ -61,9 +63,9 @@ public class JwtUtils {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("principalName", String.class);
     }
 
-    public String getAccessToken(String token) {
+    public String getSocialToken(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("accessToken", String.class);
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("socialToken", String.class);
     }
 
 
@@ -79,27 +81,30 @@ public class JwtUtils {
 
 
 
-    public String createJwt(String principalName, String provider, Instant expiresAt) {
+    public String createJwt(String principalName, String provider, String socialToken, Instant expiresAt) {
 
         return Jwts.builder()
                 .claim("principalName", principalName)
                 .claim("provider", provider)
+                .claim("socialToken", socialToken)
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();
     }
 
-    public String createJwt(String accessToken,  Date expiresAt) {
+    public String extractAccessTokenFromAuthorizationHeader(String authHeader) {
 
-        return Jwts.builder()
-                .claim("accessToken", accessToken)
-                .claim("accessTokenReissueAt", expiresAt)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(expiresAt)
-                .signWith(secretKey)
-                .compact();
+        if (authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            log.info("JWT AuthenticationFilter token: {}", token);
+            return token;
+        } else {
+            return null;
+        }
     }
+
+
 
 
 

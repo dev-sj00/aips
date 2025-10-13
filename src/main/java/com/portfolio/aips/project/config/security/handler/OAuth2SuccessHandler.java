@@ -66,17 +66,17 @@ public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
 
 
             SaveSocialUserInfoRequestDTO userTokenReq = new SaveSocialUserInfoRequestDTO(principalName, provider, socialRefreshToken);
-            String refreshToken = jwtUtils.createJwt(principalName, provider, jwtUtils.getJWTExpiredTime("refresh_token", Instant.class));
+            String refreshToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken, jwtUtils.getJWTExpiredTime("refresh_token", Instant.class));
 
             String userAgent = request.getHeader("User-Agent");
             log.info("userAgent: {}", userAgent);
             SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq = getSaveSocialRefreshTokenInfoRequest(deviceId, refreshToken, userAgent);
             userService.saveProc(userTokenReq, refreshTokenReq);
 
-            String accessToken = jwtUtils.createJwt(principalName, provider, jwtUtils.getJWTExpiredTime("access_token", Instant.class));
+            String accessToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken, jwtUtils.getJWTExpiredTime("access_token", Instant.class));
 
-            Cookie refreshTokenCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", int.class));
-            Cookie deviceIdCookie = cookieUtils.getCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", int.class));
+            Cookie refreshTokenCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+            Cookie deviceIdCookie = cookieUtils.getCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
             
             response.addCookie(refreshTokenCookie);
             response.addCookie(deviceIdCookie);

@@ -3,6 +3,7 @@ package com.portfolio.aips.project.users.domain;
 import com.portfolio.aips.project.users.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -17,6 +18,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Slf4j
 @Table(name = "users")
 public class UsersEntity {
 
@@ -62,12 +64,17 @@ public class UsersEntity {
 
 
     @OneToMany(mappedBy = "usersEntity", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @Builder.Default //빌더 패턴 으로 entity 생성 시 new ArrayList 할당 안됨
     private List<RefreshTokenEntity> refreshTokenEntity = new ArrayList<>();
 
-    @Column(name = "social_refresh_token")
-    private String socialRefreshToken;
+
+
+
+
 
     public void addRefreshToken(RefreshTokenEntity refreshTokenEntity) {
+
+        log.info("refreshTokenEntity : {} ", refreshTokenEntity);
         this.refreshTokenEntity.add(refreshTokenEntity);
         refreshTokenEntity.setUsersEntity(this);
     }

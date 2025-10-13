@@ -31,7 +31,7 @@ public class RefreshTokenEntity {
     private String userAgent;
 
     @ManyToOne(optional = false)
-    @JoinColumn(name = "refresh_token")
+    @JoinColumn(name = "user_pk")
     UsersEntity usersEntity;
 
     @Column(name = "expires_at", nullable = false)

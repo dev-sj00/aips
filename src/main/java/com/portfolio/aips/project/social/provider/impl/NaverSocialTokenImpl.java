@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.social.impl;
+package com.portfolio.aips.project.social.provider.impl;
 
 
 import com.portfolio.aips.project.social.provider.SocialTokenProvider;

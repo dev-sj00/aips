@@ -26,7 +26,7 @@ public class UserServiceImpl implements UserService {
 
 
 
-    private UsersEntity getNewUserEntity(SaveSocialUserInfoRequestDTO userReq, SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq) {
+    private UsersEntity getNewUserEntity(SaveSocialUserInfoRequestDTO userReq) {
 
         return UsersEntity.
                 builder()
@@ -34,11 +34,17 @@ public class UserServiceImpl implements UserService {
                 .nickname("익명")
                 .principalName(userReq.principalName())
                 .provider(userReq.provider())
-                .socialRefreshToken(refreshTokenReq.refreshToken())
                 .build();
     }
 
     private RefreshTokenEntity getNewRefreshTokenEntity(SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq) {
+        log.info("refreshTokenReq={}", RefreshTokenEntity.builder()
+                .deviceId(refreshTokenReq.deviceId())
+                .userAgent(refreshTokenReq.userAgent())
+                .refreshToken(refreshTokenReq.refreshToken())
+                .expiresAt(refreshTokenReq.expiresAt())
+                .build());
+
         return RefreshTokenEntity.builder()
                 .deviceId(refreshTokenReq.deviceId())
                 .userAgent(refreshTokenReq.userAgent())
@@ -53,12 +59,13 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void saveProc(SaveSocialUserInfoRequestDTO userReq, SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq) {
+
         UsersEntity usersEntity = usersRepository
                 .findByPrincipalNameAndProvider(userReq.principalName(), userReq.provider())
-                .orElseGet(() -> getNewUserEntity(userReq, refreshTokenReq));
+                .orElseGet(() -> getNewUserEntity(userReq));
 
 
-
+        log.info("refreshTokenReq: {}", refreshTokenReq);
         if (usersEntity.getPk() == null) { //새유저
             usersEntity.addRefreshToken(getNewRefreshTokenEntity(refreshTokenReq));
         }else{
