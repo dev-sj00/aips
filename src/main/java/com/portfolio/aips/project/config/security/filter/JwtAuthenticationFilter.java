@@ -1,9 +1,9 @@
 package com.portfolio.aips.project.config.security.filter;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.portfolio.aips.project.config.security.filter.autoLogin.impl.autoLogin.JwtTokenRotationServiceImpl;
+import com.portfolio.aips.project.config.security.filter.autoLogin.interfaces.AutoLoginService;
 import com.portfolio.aips.project.social.provider.dto.SocialTokenValidationResultDTO;
-import com.portfolio.aips.project.social.provider.enums.TokenStatus;
 import com.portfolio.aips.project.users.domain.RefreshTokenEntity;
 import com.portfolio.aips.project.users.dto.TokenPairDTO;
 import com.portfolio.aips.project.users.repo.RefreshTokenRepository;
@@ -14,7 +14,6 @@ import com.portfolio.aips.project.users.service.CustomUserDetailService;
 import com.portfolio.aips.project.social.service.SocialTokenValidatorService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
@@ -29,7 +28,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Map;
 import java.util.Optional;
 
 
@@ -37,11 +35,8 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-    private final JwtUtils jwtUtils;
-    private final CustomUserDetailService customUserDetailService;
-    private final SocialTokenValidatorService socialTokenValidatorService;
-    private final CookieUtils cookieUtils;
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final AutoLoginService autoLoginService;
+
 
 
     @Override
@@ -50,8 +45,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
         log.info("jwtAuthentication Filter 실행 {}", request.getRequestURI());
+
+        autoLoginService.autoLoginProc(request, response);
         //access token 가져오기
-        Optional<String> authHeader = Optional.ofNullable(request.getHeader("Authorization"));
+/*        Optional<String> authHeader = Optional.ofNullable(request.getHeader("Authorization"));
         String accessToken = null;
 
 
@@ -63,7 +60,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String refreshToken = cookieUtils.extractCookieToken(request, "refresh_token");
         String deviceId = cookieUtils.extractCookieToken(request, "device_id");
-        String socialToken = cookieUtils.extractCookieToken(request, "social_token");
 
 
         boolean isNotExpiredRefreshToken = false;
@@ -79,6 +75,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
              SocialTokenValidationResultDTO scTokenDTO =  socialTokenValidatorService.validateToken(refreshToken);
              if (isNullOrExpiredAccessToken && scTokenDTO.isValid()) {
                  log.info("token rotation 실행");
+                String socialToken = jwtUtils.getSocialToken(refreshToken);
                 TokenPairDTO tokenPairDTO = refreshTokenRotation(new RotationTokenDTO(deviceId, refreshToken, socialToken, jwtUtils));
                 response.setHeader("Authorization", "Bearer " + tokenPairDTO.getAccessToken());
                 setRefreshTokenByClientResponseType(request, response, tokenPairDTO.getRefreshToken());
@@ -89,39 +86,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
 
-        }
+        }*/
 
         filterChain.doFilter(request, response);
     }
 
 
-    private void setRefreshTokenByClientResponseType(HttpServletRequest request, HttpServletResponse response, String refreshToken) throws IOException {
-
-        if (isMobileRequest(request)) {
-
-            response.setContentType("application/json;charset=UTF-8");
-
-            Map<String, String> refreshOnly = Map.of("refreshToken", refreshToken);
-            new ObjectMapper().writeValue(response.getWriter(), refreshOnly);
-        } else {
-            // 웹요청 refreshToken은 쿠키로
-            Cookie refreshCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-            response.addCookie(refreshCookie);
-        }
-
-    }
 
 
-    private boolean isMobileRequest(HttpServletRequest request) {
-        String userAgent = request.getHeader("User-Agent");
-        String clientType = request.getHeader("X-Client-Type"); // 모바일 앱에서 보낼 커스텀 헤더
-
-        return (clientType != null && clientType.equalsIgnoreCase("MOBILE"))
-                || (userAgent != null && userAgent.toLowerCase().contains("mobile"));
-    }
 
 
-    private TokenPairDTO refreshTokenRotation(RotationTokenDTO rotationTokenDTO) {
+/*    private TokenPairDTO refreshTokenRotation(RotationTokenDTO rotationTokenDTO) {
 
         Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findByDeviceId(rotationTokenDTO.getDeviceId());
         String refreshToken = rotationTokenDTO.getRefreshToken();
@@ -137,9 +112,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         throw new RuntimeException("Refresh token expired or invalid");
-    }
+    }*/
 
-    @Getter
+
+/*    @Getter
     private static class RotationTokenDTO {
         String deviceId;
         String refreshToken;
@@ -171,21 +147,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
 
-    }
+    }*/
 
 
 
 
 
 
-    private void createAuthentication(String token) {
-        String principalName = jwtUtils.getPrincipalName(token);
-        String provider = jwtUtils.getProvider(token);
-        UserDetails userDetails = customUserDetailService.loadSocialUserByPrincipalNameAndProvider(principalName, provider);
-        UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authToken);
 
-    }
 
 
 

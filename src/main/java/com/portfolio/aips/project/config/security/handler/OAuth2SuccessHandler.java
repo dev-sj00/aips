@@ -1,6 +1,8 @@
 package com.portfolio.aips.project.config.security.handler;
 
 import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
+import com.portfolio.aips.project.users.dto.SaveProcResultDTO;
+import com.portfolio.aips.project.users.enums.UserEnvironmentType;
 import com.portfolio.aips.project.utils.CookieUtils;
 import com.portfolio.aips.project.utils.JwtUtils;
 import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
@@ -24,6 +26,11 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.UUID;
 
+
+
+/*
+할일 : 리팩토링, AccessToken == RefreshToken (provider, principalName) 만들기
+ */
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -66,18 +73,35 @@ public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
 
 
             SaveSocialUserInfoRequestDTO userTokenReq = new SaveSocialUserInfoRequestDTO(principalName, provider, socialRefreshToken);
-            String refreshToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken, jwtUtils.getJWTExpiredTime("refresh_token", Instant.class));
+            String refreshToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken);
 
             String userAgent = request.getHeader("User-Agent");
             log.info("userAgent: {}", userAgent);
             SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq = getSaveSocialRefreshTokenInfoRequest(deviceId, refreshToken, userAgent);
-            userService.saveProc(userTokenReq, refreshTokenReq);
 
-            String accessToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken, jwtUtils.getJWTExpiredTime("access_token", Instant.class));
 
-            Cookie refreshTokenCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-            Cookie deviceIdCookie = cookieUtils.getCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-            
+
+
+            String accessToken = jwtUtils.createJwt(principalName, provider);
+
+            SaveProcResultDTO saveResultDTO = userService.saveProc(userTokenReq, refreshTokenReq);
+            Cookie refreshTokenCookie;
+            Cookie deviceIdCookie;
+
+            if(saveResultDTO.getUserEnvType().equals(UserEnvironmentType.SAME_ENVIRONMENT)) {
+                String prevRefreshToken = saveResultDTO.getReusedRefreshTokenResponseDTO().refreshToken();
+                String prevDeviceId = saveResultDTO.getReusedRefreshTokenResponseDTO().deviceId();
+                refreshTokenCookie = cookieUtils.getCookie("refresh_token", prevRefreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+                deviceIdCookie = cookieUtils.getCookie("device_id", prevDeviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+
+            }else{ // 새로운 환경
+                refreshTokenCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+                deviceIdCookie = cookieUtils.getCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+            }
+
+
+
+
             response.addCookie(refreshTokenCookie);
             response.addCookie(deviceIdCookie);
             response.setHeader("Authorization", "Bearer " + accessToken);

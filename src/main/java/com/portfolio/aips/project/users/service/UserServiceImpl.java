@@ -4,11 +4,13 @@ import com.portfolio.aips.project.users.domain.UsersEntity;
 import com.portfolio.aips.project.users.domain.RefreshTokenEntity;
 import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
 import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
+import com.portfolio.aips.project.users.dto.ReusedRefreshTokenResponseDTO;
+import com.portfolio.aips.project.users.dto.SaveProcResultDTO;
+import com.portfolio.aips.project.users.enums.UserEnvironmentType;
 import com.portfolio.aips.project.users.enums.UserRole;
 import com.portfolio.aips.project.users.repo.RefreshTokenRepository;
 import com.portfolio.aips.project.users.repo.UsersRepository;
 
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -54,11 +56,9 @@ public class UserServiceImpl implements UserService {
     }
 
 
-     
-
     @Override
     @Transactional
-    public void saveProc(SaveSocialUserInfoRequestDTO userReq, SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq) {
+    public SaveProcResultDTO saveProc(SaveSocialUserInfoRequestDTO userReq, SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq) {
 
         UsersEntity usersEntity = usersRepository
                 .findByPrincipalNameAndProvider(userReq.principalName(), userReq.provider())
@@ -66,24 +66,40 @@ public class UserServiceImpl implements UserService {
 
 
         log.info("refreshTokenReq: {}", refreshTokenReq);
-        if (usersEntity.getPk() == null) { //새유저
+        UserEnvironmentType userEnvType;
+
+        SaveProcResultDTO resultDTO = new SaveProcResultDTO();
+
+        if (usersEntity.getPk() == null) { //새유저 && 새로운 환경
+
+            log.info("새로운 유저 & 새로운 접근 환경");
             usersEntity.addRefreshToken(getNewRefreshTokenEntity(refreshTokenReq));
+            resultDTO.setUserEnvType(UserEnvironmentType.NEW_ENVIRONMENT);
         }else{
-            Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findByUserAgent(refreshTokenReq.userAgent());
+            String userAgent = refreshTokenReq.userAgent();
+            Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findOneByUsersEntityAndUserAgent(usersEntity, userAgent);
+
 
             if(refreshTokenEntityOpt.isPresent())
             {
+                log.info("같은 브라우저 & 앱 환경에서 접근");
                 RefreshTokenEntity refreshTokenEntity = refreshTokenEntityOpt.get();
-                refreshTokenEntity.setRefreshToken(refreshTokenReq.refreshToken());
-                refreshTokenEntity.setExpiresAt(refreshTokenReq.expiresAt());
-            }else{ //새로운 환경에서 접근이므로 refreshToken 생성
-                usersEntity.addRefreshToken(getNewRefreshTokenEntity(refreshTokenReq));
+                String prevDeviceId = refreshTokenEntity.getDeviceId();
+                String prevRefreshToken = refreshTokenEntity.getRefreshToken();
+                resultDTO.setUserEnvType(UserEnvironmentType.NEW_ENVIRONMENT);
+                resultDTO.setReusedRefreshTokenResponseDTO(new ReusedRefreshTokenResponseDTO(prevDeviceId, prevRefreshToken));
 
+            }else{ //새로운 환경에서 접근이므로 refreshToken 생성
+                log.info("새로운 환경 접근");
+                usersEntity.addRefreshToken(getNewRefreshTokenEntity(refreshTokenReq));
+                resultDTO.setUserEnvType(UserEnvironmentType.NEW_ENVIRONMENT);
             }
 
 
         }
         usersRepository.save(usersEntity);
+
+        return resultDTO;
 
     }
 }

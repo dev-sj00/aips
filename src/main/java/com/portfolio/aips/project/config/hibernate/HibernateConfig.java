@@ -41,7 +41,7 @@ public class HibernateConfig {
 
 
         properties.put("hibernate.session_factory.statement_inspector", inspector);
-        properties.put("hibernate.hbm2ddl.auto", "create");
+        properties.put("hibernate.hbm2ddl.auto", "update");
         properties.put("hibernate.show_sql", "true");
         emf.setJpaProperties(properties);
 

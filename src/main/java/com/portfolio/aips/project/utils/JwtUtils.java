@@ -81,8 +81,10 @@ public class JwtUtils {
 
 
 
-    public String createJwt(String principalName, String provider, String socialToken, Instant expiresAt) {
+    //refresh Token용
+    public String createJwt(String principalName, String provider, String socialToken) {
 
+        Instant expiresAt = getJWTExpiredTime("refresh_token", Instant.class);
         return Jwts.builder()
                 .claim("principalName", principalName)
                 .claim("provider", provider)
@@ -92,6 +94,19 @@ public class JwtUtils {
                 .signWith(secretKey)
                 .compact();
     }
+    //access Token 용
+    public String createJwt(String principalName, String provider) {
+
+        Instant expiresAt = getJWTExpiredTime("access_token", Instant.class);
+        return Jwts.builder()
+                .claim("principalName", principalName)
+                .claim("provider", provider)
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(Date.from(expiresAt))
+                .signWith(secretKey)
+                .compact();
+    }
+
 
     public String extractAccessTokenFromAuthorizationHeader(String authHeader) {
 

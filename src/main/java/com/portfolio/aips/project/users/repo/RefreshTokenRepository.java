@@ -1,12 +1,21 @@
 package com.portfolio.aips.project.users.repo;
 
 import com.portfolio.aips.project.users.domain.RefreshTokenEntity;
+import com.portfolio.aips.project.users.domain.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshTokenEntity, Long> {
-    Optional<RefreshTokenEntity> findByUserAgent(String userAgent);
-    Optional<RefreshTokenEntity> findByDeviceId(String accessToken);
+    @Query("SELECT r FROM RefreshTokenEntity r " +
+            "WHERE r.usersEntity = :usersEntity " +
+            "AND r.userAgent = :userAgent")
+    Optional<RefreshTokenEntity> findOneByUsersEntityAndUserAgent(
+            @Param("usersEntity") UsersEntity usersEntity,
+            @Param("userAgent") String userAgent
+    );
+    Optional<RefreshTokenEntity> findByDeviceId(String deviceId);
 
 }
