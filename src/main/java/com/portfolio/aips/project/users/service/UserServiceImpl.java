@@ -66,7 +66,7 @@ public class UserServiceImpl implements UserService {
 
 
         log.info("refreshTokenReq: {}", refreshTokenReq);
-        UserEnvironmentType userEnvType;
+
 
         SaveProcResultDTO resultDTO = new SaveProcResultDTO();
 
@@ -86,8 +86,9 @@ public class UserServiceImpl implements UserService {
                 RefreshTokenEntity refreshTokenEntity = refreshTokenEntityOpt.get();
                 String prevDeviceId = refreshTokenEntity.getDeviceId();
                 String prevRefreshToken = refreshTokenEntity.getRefreshToken();
-                resultDTO.setUserEnvType(UserEnvironmentType.NEW_ENVIRONMENT);
+                resultDTO.setUserEnvType(UserEnvironmentType.SAME_ENVIRONMENT);
                 resultDTO.setReusedRefreshTokenResponseDTO(new ReusedRefreshTokenResponseDTO(prevDeviceId, prevRefreshToken));
+                refreshTokenEntity.setExpiresAt(refreshTokenEntity.getExpiresAt());
 
             }else{ //새로운 환경에서 접근이므로 refreshToken 생성
                 log.info("새로운 환경 접근");

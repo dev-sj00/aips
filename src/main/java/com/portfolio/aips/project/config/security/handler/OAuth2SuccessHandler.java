@@ -105,8 +105,7 @@ public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
             response.addCookie(refreshTokenCookie);
             response.addCookie(deviceIdCookie);
             response.setHeader("Authorization", "Bearer " + accessToken);
-
-            response.sendRedirect("/login");
+            response.sendRedirect("/");
         }
 
 

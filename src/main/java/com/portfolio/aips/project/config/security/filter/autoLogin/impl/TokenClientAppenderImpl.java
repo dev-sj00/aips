@@ -1,6 +1,7 @@
 package com.portfolio.aips.project.config.security.filter.autoLogin.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.portfolio.aips.project.config.security.filter.autoLogin.dto.DeleteTokenClientInfoDTO;
 import com.portfolio.aips.project.config.security.filter.autoLogin.dto.TokenClientAppenderDTO;
 import com.portfolio.aips.project.config.security.filter.autoLogin.interfaces.TokenClientAppender;
 import com.portfolio.aips.project.utils.CookieUtils;
@@ -36,6 +37,7 @@ public class TokenClientAppenderImpl implements TokenClientAppender {
         }
     }
 
+
     private boolean isMobileRequest(HttpServletRequest request) {
         String userAgent = request.getHeader("User-Agent");
         String clientType = request.getHeader("X-Client-Type"); // 모바일 앱에서 보낼 커스텀 헤더
@@ -43,5 +45,23 @@ public class TokenClientAppenderImpl implements TokenClientAppender {
         return (clientType != null && clientType.equalsIgnoreCase("MOBILE"))
                 || (userAgent != null && userAgent.toLowerCase().contains("mobile"));
     }
+
+
+    @Override
+    public void deleteTokenClientInfo(DeleteTokenClientInfoDTO dto) throws IOException {
+        dto.response().setHeader("Authorization", null);
+
+        if (isMobileRequest(dto.request())) {
+            dto.response().setContentType("application/json;charset=UTF-8");
+            new ObjectMapper().writeValue(dto.response().getWriter(), null);
+        }else{
+            Cookie delRefreshCookie = cookieUtils.getCookie("refresh_token", dto.refreshToken(), "/", 0);
+            Cookie delDeviceId = cookieUtils.getCookie("device_id", dto.refreshToken(), "/", 0);
+            dto.response().addCookie(delRefreshCookie);
+            dto.response().addCookie(delDeviceId);
+        }
+    }
+
+
 
 }

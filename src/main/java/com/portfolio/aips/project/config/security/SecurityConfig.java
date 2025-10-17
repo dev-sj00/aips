@@ -49,8 +49,10 @@ public class SecurityConfig {
 
         http
                 .oauth2Login(Oauth2 -> Oauth2
-                        .successHandler(successHandler)
                         .loginPage("/login")
+                        .successHandler(successHandler)
+
+
                 );
 
         http

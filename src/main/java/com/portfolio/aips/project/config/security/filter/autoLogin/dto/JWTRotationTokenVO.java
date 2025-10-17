@@ -8,7 +8,7 @@ import java.util.Date;
 
 @Getter
 
-public class JWTRotationTokenDTO {
+public class JWTRotationTokenVO {
     private final String refreshToken;
     private final String socialToken;
     private final JwtUtils jwtUtils;
@@ -17,7 +17,7 @@ public class JWTRotationTokenDTO {
 
 
 
-    public JWTRotationTokenDTO(String refreshToken, String socialToken, JwtUtils jwtUtils) {
+    public JWTRotationTokenVO(String refreshToken, String socialToken, JwtUtils jwtUtils) {
         this.refreshToken = refreshToken;
         this.socialToken = socialToken;
         this.jwtUtils = jwtUtils;
