@@ -7,7 +7,7 @@ import com.portfolio.aips.project.config.security.filter.autoLogin.interfaces.Au
 import com.portfolio.aips.project.config.security.filter.autoLogin.interfaces.TokenClientAppender;
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.social.service.SocialTokenValidatorService;
+import com.portfolio.aips.project.social.service.SocialTokenValidator;
 import com.portfolio.aips.project.users.domain.RefreshTokenEntity;
 import com.portfolio.aips.project.users.dto.TokenPairDTO;
 import com.portfolio.aips.project.users.repo.RefreshTokenRepository;
@@ -24,7 +24,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
 
 
 import java.io.IOException;
@@ -39,7 +38,7 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
     private final CookieUtils cookieUtils;
     private final TokenClientAppender tokenClientAppender;
     private final RefreshTokenRepository refreshTokenRepository;
-    private final SocialTokenValidatorService socialTokenValidatorService;
+    private final SocialTokenValidator socialTokenValidator;
     private final CustomUserDetailService customUserDetailService;
     private final EntityManager entityManager;
 
@@ -54,6 +53,7 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
 
         if(authHeader.isPresent()) {
             accessToken = jwtUtils.extractAccessTokenFromAuthorizationHeader(authHeader.get());
+
         }
 
 
@@ -74,32 +74,32 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
         JWTRotationTokenVO jwtRotationTokenVO = new JWTRotationTokenVO(refreshToken, socialToken, jwtUtils);
 
 
-        if (jwtRotationTokenVO.isExpiredRefreshToken(refreshToken)) return;
-
-        boolean isSocialTokenValid = socialTokenValidatorService.validateToken(refreshToken).isValid();
-        // null 포인터
-
-        if(!isSocialTokenValid) return;
+        if (jwtRotationTokenVO.isExpiredRefreshToken()) return;
 
 
-        if (jwtRotationTokenVO.needTokenRotation(accessToken)) {
-            log.info("Social token has been rotated");
-            try {
+
+
+        try {
+            //jwtRotationTokenVO.isDifferentFromRefreshToken(accessToken);
+
+            socialTokenValidator.validateToken(refreshToken);
+
+            if (jwtRotationTokenVO.needTokenRotation(accessToken)) {
+                log.info("Social token has been rotated");
                 tokenRotationProc(deviceId, jwtRotationTokenVO, request, response);
-
-
-            } catch (CustomException e) {
-                log.info(e.getMessage());
-                refreshTokenRepository.deleteByDeviceId(deviceId);
-                entityManager.flush();
-                tokenClientAppender.deleteTokenClientInfo(new DeleteTokenClientInfoDTO(request, response, refreshToken, accessToken));
-                throw new CustomException(e.getErrorCode());
             }
-
+        }catch (CustomException e) {
+            log.info(e.getMessage());
+            refreshTokenRepository.deleteByDeviceId(deviceId);
+            entityManager.flush();
+            tokenClientAppender.deleteTokenClientInfo(new DeleteTokenClientInfoDTO(request, response, refreshToken, accessToken));
+            throw new CustomException(e.getErrorCode());
         }
-
         createAuthentication(refreshToken);
     }
+
+
+
 
 
 
@@ -118,9 +118,7 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
         RefreshTokenEntity refreshTokenEntity =  refreshTokenEntityOpt.orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
         TokenPairDTO tokenPairDTO = refreshTokenRotation(dto, refreshTokenEntity);
 
-        response.setHeader("Authorization", "Bearer " + tokenPairDTO.getAccessToken());
-
-        tokenClientAppender.setTokenClientAppender(getTokenClientAppender(request, response, tokenPairDTO.getRefreshToken()));
+        tokenClientAppender.setTokenClientAppender(getTokenClientAppender(request, response, tokenPairDTO));
         createAuthentication(refreshToken);
         refreshTokenEntity.setRefreshToken(tokenPairDTO.getRefreshToken());
         refreshTokenEntity.setExpiresAt(jwtUtils.getJWTExpiredTime("refresh_token", Instant.class));
@@ -130,8 +128,8 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
 
     private TokenClientAppenderDTO getTokenClientAppender(    HttpServletRequest request,
                                                            HttpServletResponse response,
-                                                           String refreshToken) {
-        return new TokenClientAppenderDTO(request, response, refreshToken);
+                                                           TokenPairDTO tokenPairDTO) {
+        return new TokenClientAppenderDTO(request, response, tokenPairDTO);
     }
 
 

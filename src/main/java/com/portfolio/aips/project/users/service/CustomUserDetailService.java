@@ -12,14 +12,10 @@ import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
-public class CustomUserDetailService implements UserDetailsService {
+public class CustomUserDetailService{
     private final UsersRepository usersRepository;
 
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return null;
-    }
 
     // 소셜 로그인에서 사용 안함
     @Transactional
@@ -42,7 +38,7 @@ public class CustomUserDetailService implements UserDetailsService {
 
 
 
-    // UserDetails 객체 생성
+    // 자동 로그인 용
     private UserDetails createUserDetails(UsersEntity user) {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getPrincipalName())
@@ -55,7 +51,7 @@ public class CustomUserDetailService implements UserDetailsService {
     }
 
     
-    //소셜 로그인 용
+    //처음 로그인 용
     private UserDetails createUserDetails(String principalName, String provider) {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(principalName)

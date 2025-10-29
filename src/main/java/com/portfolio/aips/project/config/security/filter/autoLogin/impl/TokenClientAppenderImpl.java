@@ -24,16 +24,21 @@ public class TokenClientAppenderImpl implements TokenClientAppender {
     private final JwtUtils jwtUtils;
     @Override
     public void setTokenClientAppender(TokenClientAppenderDTO dto) throws IOException {
+        String refreshToken = dto.tokenPairDTO().getRefreshToken();
+        String  accessToken = dto.tokenPairDTO().getAccessToken();
         if (isMobileRequest(dto.request())) {
 
             dto.response().setContentType("application/json;charset=UTF-8");
 
-            Map<String, String> refreshOnly = Map.of("refreshToken", dto.refreshToken());
+            Map<String, String> refreshOnly = Map.of("refreshToken", refreshToken);
             new ObjectMapper().writeValue(dto.response().getWriter(), refreshOnly);
         } else {
             // 웹요청 refreshToken은 쿠키로
-            Cookie refreshCookie = cookieUtils.getCookie("refresh_token", dto.refreshToken(), "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+            Cookie refreshCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
             dto.response().addCookie(refreshCookie);
+            dto.response().setHeader("Access-Control-Expose-Headers", "Authorization");
+            dto.response().setHeader("Authorization", "Bearer " + accessToken);
+
         }
     }
 

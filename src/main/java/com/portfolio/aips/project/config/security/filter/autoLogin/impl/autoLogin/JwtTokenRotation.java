@@ -8,6 +8,8 @@ import com.portfolio.aips.project.users.dto.TokenPairDTO;
 import com.portfolio.aips.project.utils.JwtUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Date;
+
 
 @Slf4j
 public class JwtTokenRotation {
@@ -16,8 +18,6 @@ public class JwtTokenRotation {
 
 
         String refreshToken = dto.getRefreshToken();
-
-
 
 
 
@@ -47,8 +47,9 @@ public class JwtTokenRotation {
         String provider = jwtUtils.getProvider(refreshToken);
 
 
-        String newAccessToken = jwtUtils.createJwt(principalName, provider);
-        String newRefreshToken = jwtUtils.createJwt(principalName, provider, socialToken);
+        Date newIssuedAt = new Date(System.currentTimeMillis());
+        String newAccessToken = jwtUtils.createJwt(principalName, provider, newIssuedAt);
+        String newRefreshToken = jwtUtils.createJwt(principalName, provider, socialToken, newIssuedAt);
 
         return new TokenPairDTO(newAccessToken, newRefreshToken);
 

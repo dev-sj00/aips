@@ -79,33 +79,52 @@ public class JwtUtils {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getExpiration();
     }
 
+    public Date getIssuedAt(String token)
+    {
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().getIssuedAt();
+    }
+
 
 
     //refresh Token용
-    public String createJwt(String principalName, String provider, String socialToken) {
+    public String createJwt(String principalName, String provider, String socialToken, Date issuedAt) {
 
         Instant expiresAt = getJWTExpiredTime("refresh_token", Instant.class);
         return Jwts.builder()
                 .claim("principalName", principalName)
                 .claim("provider", provider)
                 .claim("socialToken", socialToken)
-                .issuedAt(new Date(System.currentTimeMillis()))
+                .issuedAt(issuedAt)
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();
     }
     //access Token 용
-    public String createJwt(String principalName, String provider) {
+    public String createJwt(String principalName, String provider, Date issuedAt) {
 
         Instant expiresAt = getJWTExpiredTime("access_token", Instant.class);
         return Jwts.builder()
                 .claim("principalName", principalName)
                 .claim("provider", provider)
-                .issuedAt(new Date(System.currentTimeMillis()))
+                .issuedAt(issuedAt)
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();
     }
+    //access token - success handler 용도
+    public String createJwt(String principalName, String provider, Date issuedAt, Date expiresAt) {
+
+        return Jwts.builder()
+                .claim("principalName", principalName)
+                .claim("provider", provider)
+                .issuedAt(issuedAt)
+                .expiration(expiresAt)
+                .signWith(secretKey)
+                .compact();
+    }
+
+
+
 
 
     public String extractAccessTokenFromAuthorizationHeader(String authHeader) {
@@ -120,40 +139,6 @@ public class JwtUtils {
     }
 
 
-
-
-
-    public TokenStatus validateWithClaims(String token) {
-        try {
-            if (token == null || token.trim().isEmpty()) {
-                return TokenStatus.NOT_EXISTS;
-            }
-
-            Claims claims = Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload();
-
-            // 기본 검증
-            if (claims.getExpiration().before(new Date())) {
-                return TokenStatus.UPDATE;
-            }
-
-            // 필수 클레임 존재 여부 확인
-            String principalName = claims.get("principalName", String.class);
-            String provider = claims.get("provider", String.class);
-
-            return (principalName != null && !principalName.trim().isEmpty() &&
-                    provider != null && !provider.trim().isEmpty())
-                    ? TokenStatus.VALID
-                    : TokenStatus.NOT_EXISTS;
-
-        } catch (JwtException | IllegalArgumentException e) {
-
-            return TokenStatus.ERROR;
-        }
-    }
 
 
 }

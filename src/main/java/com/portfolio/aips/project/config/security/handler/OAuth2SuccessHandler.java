@@ -3,6 +3,7 @@ package com.portfolio.aips.project.config.security.handler;
 import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
 import com.portfolio.aips.project.users.dto.SaveProcResultDTO;
 import com.portfolio.aips.project.users.enums.UserEnvironmentType;
+import com.portfolio.aips.project.users.service.CustomUserDetailService;
 import com.portfolio.aips.project.utils.CookieUtils;
 import com.portfolio.aips.project.utils.JwtUtils;
 import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
@@ -13,17 +14,26 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+import java.util.Date;
 import java.util.UUID;
 
 
@@ -34,7 +44,7 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
+public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final UserService userService;
     private final JwtUtils jwtUtils;
@@ -43,8 +53,14 @@ public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
     private final ApplicationContext applicationContext;
 
 
+    @Value("${frontend.url}")
+    private String frontendUrl;
+
+    private final CustomUserDetailService customUserDetailService;
+
+
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
 
         log.info("Success Handler request uri: {}", request.getRequestURI());
@@ -72,19 +88,29 @@ public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
             String socialRefreshToken = client.getRefreshToken().getTokenValue();
 
 
+            Date issuedAt = new Date(System.currentTimeMillis());
             SaveSocialUserInfoRequestDTO userTokenReq = new SaveSocialUserInfoRequestDTO(principalName, provider, socialRefreshToken);
-            String refreshToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken);
+            String refreshToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken, issuedAt);
 
             String userAgent = request.getHeader("User-Agent");
             log.info("userAgent: {}", userAgent);
+
             SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq = getSaveSocialRefreshTokenInfoRequest(deviceId, refreshToken, userAgent);
 
 
 
 
-            String accessToken = jwtUtils.createJwt(principalName, provider);
+
 
             SaveProcResultDTO saveResultDTO = userService.saveProc(userTokenReq, refreshTokenReq);
+
+
+            Instant now = Instant.now();
+
+            Instant expiry = now.plus(1, ChronoUnit.MINUTES); // 로그인 처음할경우 access token
+
+            String accessToken = jwtUtils.createJwt(principalName, provider, issuedAt, Date.from(expiry));
+
             Cookie refreshTokenCookie;
             Cookie deviceIdCookie;
 
@@ -99,15 +125,24 @@ public class OAuth2SuccessHandler  implements AuthenticationSuccessHandler {
                 deviceIdCookie = cookieUtils.getCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
             }
 
-
-
+            String redirectUrl = UriComponentsBuilder
+                    .fromUriString(frontendUrl+"/auth/success")
+                    .queryParam("accessToken", accessToken)
+                    .build()
+                    .toUriString();
 
             response.addCookie(refreshTokenCookie);
             response.addCookie(deviceIdCookie);
-            response.setHeader("Authorization", "Bearer " + accessToken);
-            response.sendRedirect("/");
+            response.sendRedirect(redirectUrl);
+
         }
 
+
+
+
+        //UserDetails userDetails = customUserDetailService.loadSocialUserByPrincipalNameAndProvider(principalName, provider);
+        //UsernamePasswordAuthenticationToken authToken =  new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+        //SecurityContextHolder.getContext().setAuthentication(authToken);
 
     }
 
