@@ -42,6 +42,7 @@ public class JWTRotationTokenVO {
 
         try {
             jwtUtils.getExpired(accessToken);
+            log.info("accessToken expired: {}", jwtUtils.getExpired(accessToken));
             return false;
         } catch (io.jsonwebtoken.ExpiredJwtException e) {
             // 토큰이 이미 만료됨

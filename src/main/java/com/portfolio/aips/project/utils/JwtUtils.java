@@ -1,6 +1,8 @@
 package com.portfolio.aips.project.utils;
 
 
+import com.portfolio.aips.project.exception.CustomException;
+import com.portfolio.aips.project.exception.ErrorCode;
 import com.portfolio.aips.project.social.provider.enums.TokenStatus;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -65,7 +67,20 @@ public class JwtUtils {
 
     public String getSocialToken(String token) {
 
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("socialToken", String.class);
+        try {
+            return Jwts.parser()
+                    .verifyWith(secretKey)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("socialToken", String.class);
+        } catch (io.jsonwebtoken.ExpiredJwtException e) {
+            // 토큰 만료
+            throw new CustomException(ErrorCode.EXPIRED_REFRESH_TOKEN);
+        } catch (io.jsonwebtoken.JwtException e) {
+            // 잘못된 토큰
+            throw new CustomException(ErrorCode.INVALID_REFRESH_TOKEN);
+        }
     }
 
 

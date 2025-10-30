@@ -34,10 +34,11 @@ public class TokenClientAppenderImpl implements TokenClientAppender {
             new ObjectMapper().writeValue(dto.response().getWriter(), refreshOnly);
         } else {
             // 웹요청 refreshToken은 쿠키로
-            Cookie refreshCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+            Cookie refreshCookie = cookieUtils.createCookie("refresh_token", refreshToken, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
             dto.response().addCookie(refreshCookie);
             dto.response().setHeader("Access-Control-Expose-Headers", "Authorization");
             dto.response().setHeader("Authorization", "Bearer " + accessToken);
+
 
         }
     }
@@ -60,10 +61,13 @@ public class TokenClientAppenderImpl implements TokenClientAppender {
             dto.response().setContentType("application/json;charset=UTF-8");
             new ObjectMapper().writeValue(dto.response().getWriter(), null);
         }else{
-            Cookie delRefreshCookie = cookieUtils.getCookie("refresh_token", dto.refreshToken(), "/", 0);
-            Cookie delDeviceId = cookieUtils.getCookie("device_id", dto.refreshToken(), "/", 0);
+            Cookie delRefreshCookie = cookieUtils.createCookie("refresh_token", dto.refreshToken(), "/", 0);
+            Cookie delDeviceId = cookieUtils.createCookie("device_id", dto.refreshToken(), "/", 0);
             dto.response().addCookie(delRefreshCookie);
             dto.response().addCookie(delDeviceId);
+            dto.response().setHeader("Authorization", "");
+            dto.response().addHeader("Set-Cookie",
+                    "test=value; Path=/; HttpOnly; Secure; SameSite=None");
         }
     }
 

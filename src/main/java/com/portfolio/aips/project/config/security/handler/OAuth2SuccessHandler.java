@@ -8,7 +8,6 @@ import com.portfolio.aips.project.utils.CookieUtils;
 import com.portfolio.aips.project.utils.JwtUtils;
 import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
 import com.portfolio.aips.project.users.service.UserService;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,16 +15,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -117,12 +111,12 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
             if(saveResultDTO.getUserEnvType().equals(UserEnvironmentType.SAME_ENVIRONMENT)) {
                 String prevRefreshToken = saveResultDTO.getReusedRefreshTokenResponseDTO().refreshToken();
                 String prevDeviceId = saveResultDTO.getReusedRefreshTokenResponseDTO().deviceId();
-                refreshTokenCookie = cookieUtils.getCookie("refresh_token", prevRefreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-                deviceIdCookie = cookieUtils.getCookie("device_id", prevDeviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+                refreshTokenCookie = cookieUtils.createCookie("refresh_token", prevRefreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+                deviceIdCookie = cookieUtils.createCookie("device_id", prevDeviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
 
             }else{ // 새로운 환경
-                refreshTokenCookie = cookieUtils.getCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-                deviceIdCookie = cookieUtils.getCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+                refreshTokenCookie = cookieUtils.createCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
+                deviceIdCookie = cookieUtils.createCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
             }
 
             String redirectUrl = UriComponentsBuilder
@@ -134,6 +128,7 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
             response.addCookie(refreshTokenCookie);
             response.addCookie(deviceIdCookie);
             response.sendRedirect(redirectUrl);
+       
 
         }
 

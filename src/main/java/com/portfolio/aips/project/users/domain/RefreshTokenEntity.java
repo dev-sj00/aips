@@ -30,7 +30,7 @@ public class RefreshTokenEntity {
     @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "user_pk")
     UsersEntity usersEntity;
 

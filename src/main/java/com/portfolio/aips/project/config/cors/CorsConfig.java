@@ -20,7 +20,10 @@ public class CorsConfig {
                 registry.addMapping("/**") // 모든 경로 허용
                         .allowedOrigins(frontendUrl)
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("Authorization", "Content-Type")
                         .allowCredentials(true);
+
+
             }
         };
     }

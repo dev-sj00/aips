@@ -5,7 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,7 +12,7 @@ import java.util.List;
 @Slf4j
 public class CookieUtils {
 
-    public Cookie getCookie(String cookieName, String cookieValue, String path,  int maxAge)
+    public Cookie createCookie(String cookieName, String cookieValue, String path, int maxAge)
     {
         Cookie cookie = new Cookie(cookieName, cookieValue);
         cookie.setHttpOnly(true);
@@ -21,6 +20,7 @@ public class CookieUtils {
         cookie.setPath(path);
 
         cookie.setMaxAge(maxAge);
+
 
         return cookie;
     }

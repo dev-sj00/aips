@@ -60,9 +60,19 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public SaveProcResultDTO saveProc(SaveSocialUserInfoRequestDTO userReq, SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq) {
 
-        UsersEntity usersEntity = usersRepository
+/*        UsersEntity usersEntity = usersRepository
                 .findByPrincipalNameAndProvider(userReq.principalName(), userReq.provider())
+                .orElseGet(() -> getNewUserEntity(userReq));*/
+
+        UsersEntity usersEntity = usersRepository
+                .findByPrincipalNameAndProviderAndUserAgent(
+                        userReq.principalName(),
+                        userReq.provider(),
+                        refreshTokenReq.userAgent()
+                )
                 .orElseGet(() -> getNewUserEntity(userReq));
+
+
 
 
         log.info("refreshTokenReq: {}", refreshTokenReq);
@@ -76,19 +86,24 @@ public class UserServiceImpl implements UserService {
             usersEntity.addRefreshToken(getNewRefreshTokenEntity(refreshTokenReq));
             resultDTO.setUserEnvType(UserEnvironmentType.NEW_ENVIRONMENT);
         }else{
-            String userAgent = refreshTokenReq.userAgent();
-            Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findOneByUsersEntityAndUserAgent(usersEntity, userAgent);
-
+            //String userAgent = refreshTokenReq.userAgent();
+            /*Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findOneByUsersEntityAndUserAgent(usersEntity, userAgent);*/
+            Optional<RefreshTokenEntity> refreshTokenEntityOpt = usersEntity.getRefreshTokenEntity().stream().findFirst();
 
             if(refreshTokenEntityOpt.isPresent())
             {
                 log.info("같은 브라우저 & 앱 환경에서 접근");
                 RefreshTokenEntity refreshTokenEntity = refreshTokenEntityOpt.get();
                 String prevDeviceId = refreshTokenEntity.getDeviceId();
-                String prevRefreshToken = refreshTokenEntity.getRefreshToken();
+                String newRefreshToken = refreshTokenReq.refreshToken();
+
                 resultDTO.setUserEnvType(UserEnvironmentType.SAME_ENVIRONMENT);
-                resultDTO.setReusedRefreshTokenResponseDTO(new ReusedRefreshTokenResponseDTO(prevDeviceId, prevRefreshToken));
-                refreshTokenEntity.setExpiresAt(refreshTokenEntity.getExpiresAt());
+
+                resultDTO.setReusedRefreshTokenResponseDTO(new ReusedRefreshTokenResponseDTO(prevDeviceId, newRefreshToken));
+
+                refreshTokenEntity.setExpiresAt(refreshTokenReq.expiresAt());
+                refreshTokenEntity.setRefreshToken(newRefreshToken);
+
 
             }else{ //새로운 환경에서 접근이므로 refreshToken 생성
                 log.info("새로운 환경 접근");
