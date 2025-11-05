@@ -134,11 +134,6 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
 
 
 
-
-        //UserDetails userDetails = customUserDetailService.loadSocialUserByPrincipalNameAndProvider(principalName, provider);
-        //UsernamePasswordAuthenticationToken authToken =  new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        //SecurityContextHolder.getContext().setAuthentication(authToken);
-
     }
 
     private SaveSocialRefreshTokenInfoRequestDTO getSaveSocialRefreshTokenInfoRequest(String deviceId, String refreshToken, String userAgent)

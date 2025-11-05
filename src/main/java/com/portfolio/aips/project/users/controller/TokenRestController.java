@@ -39,37 +39,10 @@ import java.util.UUID;
 @Slf4j
 public class TokenRestController {
 
-
-    private final OAuth2AuthorizedClientService clientService;
     private final JwtUtils jwtUtils;
-    private final UserService userService;
-    private final CookieUtils cookieUtils;
 
 
 
-
-    @PostMapping("/token")
-    public ResponseEntity<String> issuedTokenProc() {
-
-/*        if (!(authentication instanceof OAuth2AuthenticationToken)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Invalid authentication type");
-        }*/
-
-        return ResponseEntity.status(HttpStatus.ACCEPTED).build();
-
-
-    }
-
-
-    private SaveSocialRefreshTokenInfoRequestDTO getSaveSocialRefreshTokenInfoRequest(String deviceId, String refreshToken, String userAgent)
-    {
-        return new SaveSocialRefreshTokenInfoRequestDTO(
-                deviceId,
-                refreshToken,
-                userAgent,
-                jwtUtils.getJWTExpiredTime("refresh_token", Instant.class)
-        );
-    }
 }
 
 

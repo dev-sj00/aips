@@ -53,7 +53,7 @@ public class JWTRotationTokenVO {
         }
     }
 
-    public boolean isExpiredRefreshToken() {
+/*    public boolean isExpiredRefreshToken() {
         return jwtUtils.getExpired(this.refreshToken).before(new Date());
     }
 
@@ -78,6 +78,6 @@ public class JWTRotationTokenVO {
             log.error("token pair is not validate");
             throw new CustomException(ErrorCode.TOKEN_PAIR_MISMATCH);
         }
-    }
+    }*/
 
 }
