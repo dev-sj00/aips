@@ -1,8 +1,8 @@
 package com.portfolio.aips.project.users.repo;
 
 
-import com.portfolio.aips.project.users.domain.RefreshTokenEntity;
-import com.portfolio.aips.project.users.domain.UsersEntity;
+import com.portfolio.aips.project.users.entity.RefreshTokenEntity;
+import com.portfolio.aips.project.users.entity.UsersEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

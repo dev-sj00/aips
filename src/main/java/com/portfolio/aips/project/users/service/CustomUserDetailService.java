@@ -1,12 +1,12 @@
 package com.portfolio.aips.project.users.service;
 
-import com.portfolio.aips.project.users.domain.UsersEntity;
+
+import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.users.enums.UserRole;
 import com.portfolio.aips.project.users.repo.UsersRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 

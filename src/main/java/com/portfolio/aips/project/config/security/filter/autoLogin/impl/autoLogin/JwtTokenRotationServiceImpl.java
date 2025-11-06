@@ -8,7 +8,7 @@ import com.portfolio.aips.project.config.security.filter.autoLogin.interfaces.To
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
 import com.portfolio.aips.project.social.service.SocialTokenValidator;
-import com.portfolio.aips.project.users.domain.RefreshTokenEntity;
+import com.portfolio.aips.project.users.entity.RefreshTokenEntity;
 import com.portfolio.aips.project.users.dto.TokenPairDTO;
 import com.portfolio.aips.project.users.repo.RefreshTokenRepository;
 import com.portfolio.aips.project.users.service.CustomUserDetailService;
