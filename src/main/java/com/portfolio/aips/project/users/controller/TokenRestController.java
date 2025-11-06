@@ -11,6 +11,7 @@ import com.portfolio.aips.project.users.service.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,6 +25,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,12 +37,18 @@ import java.util.UUID;
 //페이지 이동할때마다 jwt filter 인증용
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/v1/users")
 @Slf4j
 public class TokenRestController {
 
     private final JwtUtils jwtUtils;
 
+
+    @GetMapping("/api/test")
+    public void Test(@AuthenticationPrincipal UserDetails userDetails) {
+
+        log.info("userDetails={}", userDetails);
+        log.info("username={}", userDetails.getUsername());
+    }
 
 
 }

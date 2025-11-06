@@ -66,6 +66,7 @@ public class SecurityConfig {
 
 
         http
+                .cors(Customizer.withDefaults())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests((auth) -> auth
                         .requestMatchers("/**").permitAll()

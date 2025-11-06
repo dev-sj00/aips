@@ -17,6 +17,9 @@ import com.portfolio.aips.project.utils.JwtUtils;
 import jakarta.persistence.EntityManager;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +43,7 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
     private final RefreshTokenRepository refreshTokenRepository;
     private final SocialTokenValidator socialTokenValidator;
     private final EntityManager entityManager;
+    private final CustomUserDetailService customUserDetailService;
 
 
     @Override
@@ -64,21 +68,24 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
 
 
 
-        if(refreshToken == null || deviceId == null) return;
+        if(refreshToken == null || deviceId == null) {log.info("323232"); return;}
 
 
 
         try {
             String socialToken = jwtUtils.getSocialToken(refreshToken);
             JWTRotationTokenVO jwtRotationTokenVO = new JWTRotationTokenVO(refreshToken, socialToken, jwtUtils);
-
+            String newAccessToken = null;
 
             if (jwtRotationTokenVO.needTokenRotation(accessToken)) {
 
                 log.info("access token has been rotated");
                 socialTokenValidator.validateToken(refreshToken);
-                tokenRotationProc(deviceId, jwtRotationTokenVO, request, response);
+                newAccessToken = tokenRotationProc(deviceId, jwtRotationTokenVO, request, response);
             }
+
+            createAuthentication(newAccessToken != null ? newAccessToken : accessToken);
+
         }catch (CustomException e) {
             log.info(e.getMessage());
             refreshTokenRepository.deleteByDeviceId(deviceId);
@@ -97,7 +104,7 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
 
 
 
-    private void tokenRotationProc(String deviceId, JWTRotationTokenVO dto, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private String tokenRotationProc(String deviceId, JWTRotationTokenVO dto, HttpServletRequest request, HttpServletResponse response) throws IOException {
         Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findByDeviceId(deviceId);
         RefreshTokenEntity refreshTokenEntity =  refreshTokenEntityOpt.orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
         TokenPairDTO tokenPairDTO = refreshTokenRotation(dto, refreshTokenEntity);
@@ -107,6 +114,7 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
         refreshTokenEntity.setRefreshToken(tokenPairDTO.getRefreshToken());
         refreshTokenEntity.setExpiresAt(jwtUtils.getJWTExpiredTime("refresh_token", Instant.class));
 
+        return tokenPairDTO.getAccessToken();
     }
 
 
@@ -114,6 +122,28 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
                                                            HttpServletResponse response,
                                                            TokenPairDTO tokenPairDTO) {
         return new TokenClientAppenderDTO(request, response, tokenPairDTO);
+    }
+
+
+    private void createAuthentication(String token)
+    {
+        String principalName = jwtUtils.getPrincipalName(token);
+        String provider = jwtUtils.getProvider(token);
+
+        UserDetails userDetails = customUserDetailService.loadSocialUserByPrincipalNameAndProvider(principalName, provider);
+
+        // ✅ 4️⃣ Authentication 객체 생성
+        UsernamePasswordAuthenticationToken authToken =
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        null,
+                        userDetails.getAuthorities()
+                );
+
+        // ✅ 5️⃣ SecurityContext에 Authentication 세팅
+
+        log.info("인증 객체 생성");
+        SecurityContextHolder.getContext().setAuthentication(authToken);
     }
 
 
