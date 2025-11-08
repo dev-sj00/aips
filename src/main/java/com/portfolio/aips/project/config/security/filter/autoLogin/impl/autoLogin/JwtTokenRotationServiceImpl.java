@@ -1,7 +1,7 @@
 package com.portfolio.aips.project.config.security.filter.autoLogin.impl.autoLogin;
 
 import com.portfolio.aips.project.config.security.filter.autoLogin.dto.DeleteTokenClientInfoDTO;
-import com.portfolio.aips.project.config.security.filter.autoLogin.dto.JWTRotationTokenVO;
+import com.portfolio.aips.project.config.security.filter.autoLogin.dto.JWTRotationTokenValidVO;
 import com.portfolio.aips.project.config.security.filter.autoLogin.dto.TokenClientAppenderDTO;
 import com.portfolio.aips.project.config.security.filter.autoLogin.interfaces.AutoLoginService;
 import com.portfolio.aips.project.config.security.filter.autoLogin.interfaces.TokenClientAppender;
@@ -73,14 +73,13 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
 
 
         try {
-            String socialToken = jwtUtils.getSocialToken(refreshToken);
-            JWTRotationTokenVO jwtRotationTokenVO = new JWTRotationTokenVO(refreshToken, socialToken, jwtUtils);
+            JWTRotationTokenValidVO jwtRotationTokenVO = new JWTRotationTokenValidVO(refreshToken, jwtUtils);
             String newAccessToken = null;
 
             if (jwtRotationTokenVO.needTokenRotation(accessToken)) {
 
                 log.info("access token has been rotated");
-                socialTokenValidator.validateToken(refreshToken);
+                socialTokenValidator.validateToken(jwtRotationTokenVO.getSocialToken());
                 newAccessToken = tokenRotationProc(deviceId, jwtRotationTokenVO, request, response);
             }
 
@@ -104,10 +103,10 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
 
 
 
-    private String tokenRotationProc(String deviceId, JWTRotationTokenVO dto, HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private String tokenRotationProc(String deviceId, JWTRotationTokenValidVO vo, HttpServletRequest request, HttpServletResponse response) throws IOException {
         Optional<RefreshTokenEntity> refreshTokenEntityOpt = refreshTokenRepository.findByDeviceId(deviceId);
         RefreshTokenEntity refreshTokenEntity =  refreshTokenEntityOpt.orElseThrow(() -> new CustomException(ErrorCode.DEVICE_NOT_FOUND));
-        TokenPairDTO tokenPairDTO = refreshTokenRotation(dto, refreshTokenEntity);
+        TokenPairDTO tokenPairDTO = refreshTokenRotation(vo, refreshTokenEntity);
 
         tokenClientAppender.setTokenClientAppender(getTokenClientAppender(request, response, tokenPairDTO));
 
@@ -127,10 +126,10 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
 
     private void createAuthentication(String token)
     {
-        String principalName = jwtUtils.getPrincipalName(token);
+        Long userPk = jwtUtils.getUserPk(token);
         String provider = jwtUtils.getProvider(token);
 
-        UserDetails userDetails = customUserDetailService.loadSocialUserByPrincipalNameAndProvider(principalName, provider);
+        UserDetails userDetails = customUserDetailService.createUserDetails(userPk, provider);
 
         // ✅ 4️⃣ Authentication 객체 생성
         UsernamePasswordAuthenticationToken authToken =

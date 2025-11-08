@@ -3,8 +3,8 @@ package com.portfolio.aips.project.utils;
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.social.provider.enums.TokenStatus;
-import io.jsonwebtoken.Claims;
+import com.portfolio.aips.project.utils.dto.CreateAcTokenDTO;
+import com.portfolio.aips.project.utils.dto.CreateRfTokenDTO;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 
@@ -60,10 +60,6 @@ public class JwtUtils {
 
 
 
-    public String getPrincipalName(String token) {
-
-        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("principalName", String.class);
-    }
 
     public String getSocialToken(String token) {
 
@@ -84,8 +80,13 @@ public class JwtUtils {
     }
 
 
-    public String getProvider(String token) {
+    public Long getUserPk(String token) {
 
+        return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("userPk", Long.class);
+    }
+
+    public String getProvider(String token)
+    {
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("provider", String.class);
     }
 
@@ -101,38 +102,36 @@ public class JwtUtils {
 
 
 
-    //refresh Token용
-    public String createJwt(String principalName, String provider, String socialToken, Date issuedAt) {
+    //refresh Token용 String userPk, String socialToken, Date issuedAt
+    public String createJwt(CreateRfTokenDTO dto) {
 
         Instant expiresAt = getJWTExpiredTime("refresh_token", Instant.class);
         return Jwts.builder()
-                .claim("principalName", principalName)
-                .claim("provider", provider)
-                .claim("socialToken", socialToken)
-                .issuedAt(issuedAt)
+                .claim("userPk", dto.userPk())
+                .claim("provider", dto.provider())
+                .claim("socialToken", dto.socialToken())
+                .issuedAt(dto.issuedAt())
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();
     }
     //access Token 용
-    public String createJwt(String principalName, String provider, Date issuedAt) {
+    public String createJwt(CreateAcTokenDTO dto) {
 
         Instant expiresAt = getJWTExpiredTime("access_token", Instant.class);
         return Jwts.builder()
-                .claim("principalName", principalName)
-                .claim("provider", provider)
-                .issuedAt(issuedAt)
+                .claim("userPk", dto.userPk())
+                .issuedAt(dto.issuedAt())
                 .expiration(Date.from(expiresAt))
                 .signWith(secretKey)
                 .compact();
     }
     //access token - success handler 용도
-    public String createJwt(String principalName, String provider, Date issuedAt, Date expiresAt) {
+    public String createJwt(CreateAcTokenDTO dto, Date expiresAt) {
 
         return Jwts.builder()
-                .claim("principalName", principalName)
-                .claim("provider", provider)
-                .issuedAt(issuedAt)
+                .claim("userPk", dto.userPk())
+                .issuedAt(dto.issuedAt())
                 .expiration(expiresAt)
                 .signWith(secretKey)
                 .compact();

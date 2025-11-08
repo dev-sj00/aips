@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class SaveProcResultDTO {
+public class RefreshSaveProcResultDTO {
     private UserEnvironmentType userEnvType;
     private ReusedRefreshTokenResponseDTO reusedRefreshTokenResponseDTO;
 }

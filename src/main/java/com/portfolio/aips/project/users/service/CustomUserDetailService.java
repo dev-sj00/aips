@@ -1,6 +1,6 @@
 package com.portfolio.aips.project.users.service;
 
-
+import com.portfolio.aips.project.users.dto.CustomUserDetails;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.users.enums.UserRole;
 import com.portfolio.aips.project.users.repo.UsersRepository;
@@ -26,14 +26,10 @@ public class CustomUserDetailService{
                         "User not found with principalName: " + principalName + " and provider: " + provider));
 
 
-            return createUserDetails(usersEntity);
+        return createUserDetails(usersEntity);
     }
 
-    public UserDetails loadSocialUserByPrincipalNameAndProvider(String principalName, String provider) throws UsernameNotFoundException {
 
-        return createUserDetails(principalName, provider);
-
-    }
 
 
 
@@ -42,7 +38,7 @@ public class CustomUserDetailService{
     private UserDetails createUserDetails(UsersEntity user) {
         return org.springframework.security.core.userdetails.User.builder()
                 .username(user.getPrincipalName())
-                .password("") 
+                .password("")
                 .authorities(user.getRole().toString())
                 .accountExpired(false)
                 .accountLocked(false)
@@ -50,17 +46,11 @@ public class CustomUserDetailService{
                 .build();
     }
 
-    
+
     //처음 로그인 용
-    private UserDetails createUserDetails(String principalName, String provider) {
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(principalName)
-                .password("") // OAuth2 사용자는 비밀번호가 없음
-                .authorities(UserRole.ROLE_USER.toString()) //admin 계정은 자체 로그인만 가능
-                .accountExpired(false)
-                .accountLocked(false)
-                .credentialsExpired(false)
-                .build();
+    public UserDetails createUserDetails(Long userPk, String provider) {
+
+        return CustomUserDetails.build(userPk, provider, "", UserRole.ROLE_USER.toString());
     }
 
 

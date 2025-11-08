@@ -1,11 +1,13 @@
 package com.portfolio.aips.project.config.security.filter.autoLogin.impl.autoLogin;
 
-import com.portfolio.aips.project.config.security.filter.autoLogin.dto.JWTRotationTokenVO;
+import com.portfolio.aips.project.config.security.filter.autoLogin.dto.JWTRotationTokenValidVO;
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
 import com.portfolio.aips.project.users.entity.RefreshTokenEntity;
 import com.portfolio.aips.project.users.dto.TokenPairDTO;
 import com.portfolio.aips.project.utils.JwtUtils;
+import com.portfolio.aips.project.utils.dto.CreateAcTokenDTO;
+import com.portfolio.aips.project.utils.dto.CreateRfTokenDTO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
@@ -14,10 +16,10 @@ import java.util.Date;
 @Slf4j
 public class JwtTokenRotation {
 
-    public TokenPairDTO refreshTokenRotation(JWTRotationTokenVO dto, RefreshTokenEntity refreshTokenEntity) {
+    public TokenPairDTO refreshTokenRotation(JWTRotationTokenValidVO vo, RefreshTokenEntity refreshTokenEntity) {
 
 
-        String refreshToken = dto.getRefreshToken();
+        String refreshToken = vo.getRefreshToken();
 
 
 
@@ -34,22 +36,23 @@ public class JwtTokenRotation {
 
 
 
-        String socialToken = dto.getSocialToken();
-        JwtUtils jwtUtils = dto.getJwtUtils();
 
-        return getJwtTokens(refreshToken, socialToken, jwtUtils);
+
+        return getJwtTokens(vo);
 
 
     }
 
-    private TokenPairDTO getJwtTokens(String refreshToken, String socialToken, JwtUtils jwtUtils) {
-        String principalName = jwtUtils.getPrincipalName(refreshToken);
-        String provider = jwtUtils.getProvider(refreshToken);
+    private TokenPairDTO getJwtTokens(JWTRotationTokenValidVO vo) {
+        JwtUtils jwtUtils = vo.getJwtUtils();
+        Long userPk = vo.getUserPk();
+        String socialToken = vo.getSocialToken();
+        String provider = vo.getProvider();
 
 
         Date newIssuedAt = new Date(System.currentTimeMillis());
-        String newAccessToken = jwtUtils.createJwt(principalName, provider, newIssuedAt);
-        String newRefreshToken = jwtUtils.createJwt(principalName, provider, socialToken, newIssuedAt);
+        String newAccessToken = jwtUtils.createJwt(new CreateAcTokenDTO(userPk, newIssuedAt));
+        String newRefreshToken = jwtUtils.createJwt(new CreateRfTokenDTO(userPk, provider, socialToken, newIssuedAt));
 
         return new TokenPairDTO(newAccessToken, newRefreshToken);
 

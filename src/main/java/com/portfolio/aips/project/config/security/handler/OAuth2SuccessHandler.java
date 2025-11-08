@@ -1,13 +1,16 @@
 package com.portfolio.aips.project.config.security.handler;
 
 import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
-import com.portfolio.aips.project.users.dto.SaveProcResultDTO;
+import com.portfolio.aips.project.users.dto.RefreshSaveProcResultDTO;
+import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.users.enums.UserEnvironmentType;
 import com.portfolio.aips.project.users.service.CustomUserDetailService;
+import com.portfolio.aips.project.users.service.RefreshToken.RefreshTokenService;
 import com.portfolio.aips.project.utils.CookieUtils;
 import com.portfolio.aips.project.utils.JwtUtils;
 import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
-import com.portfolio.aips.project.users.service.UserService;
+import com.portfolio.aips.project.users.service.user.UserService;
+import com.portfolio.aips.project.utils.dto.CreateAcTokenDTO;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -15,16 +18,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -45,6 +44,7 @@ import java.util.UUID;
 public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccessHandler {
 
     private final UserService userService;
+    private final RefreshTokenService refreshTokenService;
     private final JwtUtils jwtUtils;
     private final OAuth2AuthorizedClientService clientService;
     private final CookieUtils cookieUtils;
@@ -54,7 +54,6 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    private final CustomUserDetailService customUserDetailService;
 
 
     @Override
@@ -87,41 +86,25 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
 
 
             Date issuedAt = new Date(System.currentTimeMillis());
-            SaveSocialUserInfoRequestDTO userTokenReq = new SaveSocialUserInfoRequestDTO(principalName, provider, socialRefreshToken);
-            String refreshToken = jwtUtils.createJwt(principalName, provider, socialRefreshToken, issuedAt);
-
             String userAgent = request.getHeader("User-Agent");
             log.info("userAgent: {}", userAgent);
 
-            SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq = getSaveSocialRefreshTokenInfoRequest(deviceId, refreshToken, userAgent);
+            SaveSocialUserInfoRequestDTO userTokenReq = new SaveSocialUserInfoRequestDTO(principalName, provider, socialRefreshToken, userAgent);
+            SaveSocialRefreshTokenInfoRequestDTO refreshTokenReq = getSaveSocialRefreshTokenInfoRequest(deviceId, provider, socialRefreshToken, userAgent);
+
+            UsersEntity usersEntity = userService.saveProc(userTokenReq);
+            RefreshSaveProcResultDTO saveResultDTO = refreshTokenService.saveProc(refreshTokenReq, usersEntity);
 
 
 
 
+            String refreshToken = saveResultDTO.getReusedRefreshTokenResponseDTO().refreshToken();
+            Cookie refreshTokenCookie =  cookieUtils.createCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
 
+            Cookie deviceIdCookie = createDeviceIdCookie(saveResultDTO, deviceId);
 
-            SaveProcResultDTO saveResultDTO = userService.saveProc(userTokenReq, refreshTokenReq);
+            String accessToken = createAccessToken(saveResultDTO, issuedAt.toInstant());
 
-
-            Instant now = Instant.now();
-
-            Instant expiry = now.plus(1, ChronoUnit.MINUTES); // 로그인 처음할경우 access token
-
-            String accessToken = jwtUtils.createJwt(principalName, provider, issuedAt, Date.from(expiry));
-
-            Cookie refreshTokenCookie;
-            Cookie deviceIdCookie;
-
-            if(saveResultDTO.getUserEnvType().equals(UserEnvironmentType.SAME_ENVIRONMENT)) {
-                String prevRefreshToken = saveResultDTO.getReusedRefreshTokenResponseDTO().refreshToken();
-                String prevDeviceId = saveResultDTO.getReusedRefreshTokenResponseDTO().deviceId();
-                refreshTokenCookie = cookieUtils.createCookie("refresh_token", prevRefreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-                deviceIdCookie = cookieUtils.createCookie("device_id", prevDeviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-
-            }else{ // 새로운 환경
-                refreshTokenCookie = cookieUtils.createCookie("refresh_token", refreshToken, "/",jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-                deviceIdCookie = cookieUtils.createCookie("device_id", deviceId, "/", jwtUtils.getJWTExpiredTime("refresh_token", Integer.class));
-            }
 
             String redirectUrl = UriComponentsBuilder
                     .fromUriString(frontendUrl+"/auth/success")
@@ -129,15 +112,10 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
                     .build()
                     .toUriString();
 
-
-
             response.addCookie(refreshTokenCookie);
             response.addCookie(deviceIdCookie);
             response.sendRedirect(redirectUrl);
 
-
-
-       
 
         }
 
@@ -145,11 +123,40 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
 
     }
 
-    private SaveSocialRefreshTokenInfoRequestDTO getSaveSocialRefreshTokenInfoRequest(String deviceId, String refreshToken, String userAgent)
+    private String createAccessToken(RefreshSaveProcResultDTO saveResultDTO, Instant issuedAt) {
+        Long userPk = saveResultDTO.getReusedRefreshTokenResponseDTO().userPk();
+        Instant expiry = Instant.now().plus(1, ChronoUnit.MINUTES); // 로그인 처음할 경우 1분간 유효
+
+        return jwtUtils.createJwt(
+                CreateAcTokenDTO.builder()
+                        .userPk(userPk)
+                        .issuedAt(Date.from(issuedAt))
+                        .build(),
+                Date.from(expiry)
+        );
+    }
+
+    private Cookie createDeviceIdCookie(RefreshSaveProcResultDTO saveResultDTO, String deviceId) {
+        String path = "/";
+        int maxAge = jwtUtils.getJWTExpiredTime("refresh_token", Integer.class);
+
+        String finalDeviceId;
+
+        if (saveResultDTO.getUserEnvType().equals(UserEnvironmentType.SAME_ENVIRONMENT)) {
+            finalDeviceId = saveResultDTO.getReusedRefreshTokenResponseDTO().deviceId();
+        } else {
+            finalDeviceId = deviceId;
+        }
+
+        return cookieUtils.createCookie("device_id", finalDeviceId, path, maxAge);
+    }
+
+    private SaveSocialRefreshTokenInfoRequestDTO getSaveSocialRefreshTokenInfoRequest(String deviceId, String provider, String socialRefreshToken, String userAgent)
     {
         return new SaveSocialRefreshTokenInfoRequestDTO(
                 deviceId,
-                refreshToken,
+                provider,
+                socialRefreshToken,
                 userAgent,
                 jwtUtils.getJWTExpiredTime("refresh_token", Instant.class)
         );

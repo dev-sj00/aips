@@ -21,6 +21,7 @@ public class SocialTokenValidatorImpl implements SocialTokenValidator {
     @Override
     public void validateToken(String token) {
 
+        Long userPk = jwtUtils.getUserPk(token);
         String provider = jwtUtils.getProvider(token);
         String socialToken = jwtUtils.getSocialToken(token);
         String beanName = provider + "TokenValidator";

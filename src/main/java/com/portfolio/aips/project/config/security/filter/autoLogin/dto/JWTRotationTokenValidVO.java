@@ -1,28 +1,30 @@
 package com.portfolio.aips.project.config.security.filter.autoLogin.dto;
 
-import com.portfolio.aips.project.exception.CustomException;
-import com.portfolio.aips.project.exception.ErrorCode;
 import com.portfolio.aips.project.utils.JwtUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Getter
 @Slf4j
-public class JWTRotationTokenVO {
+public class JWTRotationTokenValidVO {
     private final String refreshToken;
     private final String socialToken;
     private final JwtUtils jwtUtils;
+    private final String provider;
+    private final Long userPk;
+
     private final Instant accessTokenExpireTime;
     private final Instant refreshTokenExpireTime;
 
 
 
-    public JWTRotationTokenVO(String refreshToken, String socialToken, JwtUtils jwtUtils) {
+    public JWTRotationTokenValidVO(String refreshToken, JwtUtils jwtUtils) {
+        this.provider = jwtUtils.getProvider(refreshToken);
         this.refreshToken = refreshToken;
-        this.socialToken = socialToken;
+        this.socialToken = jwtUtils.getSocialToken(refreshToken);
+        this.userPk = jwtUtils.getUserPk(refreshToken);
         this.jwtUtils = jwtUtils;
         this.accessTokenExpireTime = jwtUtils.getJWTExpiredTime("access_token", Instant.class);
         this.refreshTokenExpireTime = jwtUtils.getJWTExpiredTime("refresh_token", Instant.class);
@@ -53,31 +55,6 @@ public class JWTRotationTokenVO {
         }
     }
 
-/*    public boolean isExpiredRefreshToken() {
-        return jwtUtils.getExpired(this.refreshToken).before(new Date());
-    }
 
-    public void isDifferentFromRefreshToken(String accessToken) {
-
-        if(accessToken == null)
-        {
-            return;
-        }
-
-        String acPrincipalName = jwtUtils.getPrincipalName(accessToken);
-        String acProvider = jwtUtils.getProvider(accessToken);
-        Date acIssuedAt = jwtUtils.getIssuedAt(accessToken);
-        String rfPrincipalName = jwtUtils.getPrincipalName(refreshToken);
-        String rfProvider = jwtUtils.getProvider(refreshToken);
-        Date rfIssuedAt = jwtUtils.getIssuedAt(refreshToken);
-
-
-
-        if(!(acPrincipalName.equals(rfPrincipalName) && acProvider.equals(rfProvider) && acIssuedAt.equals(rfIssuedAt)))
-        {
-            log.error("token pair is not validate");
-            throw new CustomException(ErrorCode.TOKEN_PAIR_MISMATCH);
-        }
-    }*/
 
 }
