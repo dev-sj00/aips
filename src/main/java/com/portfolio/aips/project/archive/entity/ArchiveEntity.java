@@ -1,17 +1,22 @@
-package com.portfolio.aips.project.archived.entity;
+package com.portfolio.aips.project.archive.entity;
 
 
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
-@Table(name = "archived")
+@Table(name = "archive")
 @Entity
-public class ArchivedEntity {
+@Setter
+@Getter
+public class ArchiveEntity {
 
     @Id
-    @Column(name = "user_pk")
+    @Column(name = "archive_pk")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pk;
 
@@ -31,12 +36,15 @@ public class ArchivedEntity {
     private String siteSlug;
 
 
+    @CreatedDate
     @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    private LocalDateTime createdDateTime;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_pk")
     private UsersEntity users;
+
+
 
 
 

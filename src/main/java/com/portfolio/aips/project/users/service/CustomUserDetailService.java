@@ -48,9 +48,11 @@ public class CustomUserDetailService{
 
 
     //처음 로그인 용
+
     public UserDetails createUserDetails(Long userPk, String provider) {
 
         return CustomUserDetails.build(userPk, provider, "", UserRole.ROLE_USER.toString());
+
     }
 
 
