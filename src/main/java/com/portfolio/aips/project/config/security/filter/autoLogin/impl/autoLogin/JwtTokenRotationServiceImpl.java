@@ -79,7 +79,7 @@ public class JwtTokenRotationServiceImpl extends JwtTokenRotation implements Aut
             if (jwtRotationTokenVO.needTokenRotation(accessToken)) {
 
                 log.info("access token has been rotated");
-                socialTokenValidator.validateToken(jwtRotationTokenVO.getSocialToken());
+                socialTokenValidator.validateToken(jwtRotationTokenVO.getRefreshToken());
                 newAccessToken = tokenRotationProc(deviceId, jwtRotationTokenVO, request, response);
             }
 

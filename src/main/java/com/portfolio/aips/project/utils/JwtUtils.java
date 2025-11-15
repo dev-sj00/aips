@@ -81,7 +81,7 @@ public class JwtUtils {
 
 
     public Long getUserPk(String token) {
-
+        log.info("token {}", token);
         return Jwts.parser().verifyWith(secretKey).build().parseSignedClaims(token).getPayload().get("userPk", Long.class);
     }
 

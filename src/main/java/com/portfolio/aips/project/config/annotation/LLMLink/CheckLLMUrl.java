@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.config.annotation.archived;
+package com.portfolio.aips.project.config.annotation.LLMLink;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
@@ -6,8 +6,8 @@ import jakarta.validation.Payload;
 import java.lang.annotation.Documented;
 
 @Documented
-@Constraint(validatedBy = ArchiveLinkValidator.class)
-public @interface CheckArchiveUrl {
+@Constraint(validatedBy = LLMLinkValidator.class)
+public @interface CheckLLMUrl {
     
     String message() default "archiveLink가 올바르지 않습니다."; //에러시 기본 메시지
     Class<?>[] groups() default {};

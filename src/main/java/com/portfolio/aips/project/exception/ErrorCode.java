@@ -12,9 +12,10 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "ACCOUNT-002", "다른 기기에서 로그인되어 로그아웃되었습니다."),
     EXPIRED_REFRESH_TOKEN(HttpStatus.UNAUTHORIZED, "ACCOUNT-003", "장시간 미접속으로 인해 로그아웃되었습니다."),
     TOKEN_PAIR_MISMATCH(HttpStatus.CONFLICT, "ACCOUNT-004", "토큰이 변조되어 로그아웃되었습니다."),
+    USER_NOT_FOUND(HttpStatus.NOT_FOUND, "ACCOUNT-005", "유저 정보가 없습니다."),
     INVALID_SOCIAL_REFRESH_TOKEN(HttpStatus.CONFLICT, "ACCOUNT-005", "SNS 로그인 토큰 문제로 로그아웃되었습니다."),
-    ARCHIVE_URL_UNREACHABLE(HttpStatus.BAD_REQUEST, "ARCHIVE-001", "아카이브 사이트에 문제가 생겼습니다.");
-
+    ARCHIVE_URL_UNREACHABLE(HttpStatus.BAD_REQUEST, "ARCHIVE-001", "아카이브 사이트에 문제가 생겼습니다."),
+    ARCHIVE_URL_NOT_FOUND(HttpStatus.NOT_FOUND, "ARCHIVE-002", "아카이브 사이트 대화 정보를 찾지 못했습니다!");
 
     private final HttpStatus httpStatus;
     private final String code;

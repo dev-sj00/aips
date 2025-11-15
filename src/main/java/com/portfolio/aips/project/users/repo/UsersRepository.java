@@ -25,5 +25,6 @@ public interface UsersRepository extends JpaRepository<UsersEntity, Long> {
             @Param("provider") String provider,
             @Param("userAgent") String userAgent
     );
+    Optional<UsersEntity> findByPk(long userPk);
 
 }

@@ -24,7 +24,7 @@ public class RefreshTokenEntity {
     @Column(name = "device_id", nullable = false)
     private String deviceId;
 
-    @Column(name = "refresh_token", length = 700, nullable = false)
+    @Column(name = "refresh_token", length = 2000, nullable = false)
     private String refreshToken;
 
     @Column(name = "user_agent", columnDefinition = "TEXT")
