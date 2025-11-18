@@ -38,11 +38,17 @@ public class HibernateConfig {
         log.info("jpa properties: {}", jpaProperties.getProperties());
         properties.putAll(jpaProperties.getProperties());
 
-
-
+        // 기존 설정
         properties.put("hibernate.session_factory.statement_inspector", inspector);
         properties.put("hibernate.hbm2ddl.auto", "update");
         properties.put("hibernate.show_sql", "true");
+
+        // 🔹 Hibernate batch insert 옵션 추가
+        properties.put("hibernate.jdbc.batch_size", "50");        // 한 번에 묶을 row 개수
+        properties.put("hibernate.order_inserts", "true");       // insert 순서 정렬
+        properties.put("hibernate.order_updates", "true");       // update 순서 정렬 (필요시)
+        properties.put("hibernate.generate_statistics", "true"); // 통계 확인용 (옵션)
+
         emf.setJpaProperties(properties);
 
         return emf;

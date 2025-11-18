@@ -48,7 +48,6 @@ public class OAuth2SuccessHandler extends SavedRequestAwareAuthenticationSuccess
     private final JwtUtils jwtUtils;
     private final OAuth2AuthorizedClientService clientService;
     private final CookieUtils cookieUtils;
-    private final ApplicationContext applicationContext;
 
 
     @Value("${frontend.url}")
