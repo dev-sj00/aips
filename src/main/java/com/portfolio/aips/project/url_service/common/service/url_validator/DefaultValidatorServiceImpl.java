@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.url_service.service.url_validator;
+package com.portfolio.aips.project.url_service.common.service.url_validator;
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
@@ -7,6 +7,7 @@ import com.portfolio.aips.project.utils.enums.LLMValidBodyValue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -42,11 +43,13 @@ public class DefaultValidatorServiceImpl implements UrlValidatorService{
                     // 응답 본문을 읽어와 로그를 남기거나 추가 처리를 할 수 있지만, 여기서는 간결하게 예외 발생
                     log.error("response status code: {}", response.statusCode());
 
+
+
                     // ⭐️ throw new CustomException(...)과 동일한 역할을 합니다. ⭐️
                     return response.bodyToMono(String.class)
                             .flatMap(body -> {
                                 log.error("Error response body: {}", body);
-                                return Mono.error(new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE));
+                                return Mono.error(new CustomException(ErrorCode.URL_UNREACHABLE));
                             });
                 })
 
@@ -64,7 +67,7 @@ public class DefaultValidatorServiceImpl implements UrlValidatorService{
                     // 그 외 일반적인 연결 오류 처리
                     log.error("General WebClient Error: {}", e.toString());
                     // throw new Exception(...)과 동일한 역할을 합니다.
-                    return new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE);
+                    return new CustomException(ErrorCode.URL_UNREACHABLE);
                 })
 
                 // 4. Mono를 CompletableFuture로 변환하여 최종 반환

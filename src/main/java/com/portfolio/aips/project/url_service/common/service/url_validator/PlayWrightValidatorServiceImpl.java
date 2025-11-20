@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.url_service.service.url_validator;
+package com.portfolio.aips.project.url_service.common.service.url_validator;
 
 
 import com.portfolio.aips.project.exception.CustomException;
@@ -58,13 +58,13 @@ public class PlayWrightValidatorServiceImpl implements UrlValidatorService{
 
                                 // ⭐️ 404 NOT_FOUND 일 경우 무조건 CustomException 발생
                                 if (statusCode == HttpStatus.NOT_FOUND) {
-                                    return Mono.error(new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE));
+                                    return Mono.error(new CustomException(ErrorCode.URL_NOT_FOUND));
                                 }
 
                                 // "INVALID" 응답 본문을 체크하던 기존 로직 제거 (선택 사항: 필요하면 다시 추가)
 
                                 // 그 외 4xx/5xx 에러 (404 제외)
-                                return Mono.error(new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE));
+                                return Mono.error(new CustomException(ErrorCode.URL_UNREACHABLE));
                             });
                 })
 
@@ -83,12 +83,12 @@ public class PlayWrightValidatorServiceImpl implements UrlValidatorService{
                 .onErrorMap(WebClientResponseException.class, e -> {
                     log.error("HTTP Status Code Exception: {}", e.getMessage());
                     // 404를 포함한 모든 HTTP 상태 코드 에러 시 동일한 CustomException 반환
-                    return new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE);
+                    return new CustomException(ErrorCode.URL_UNREACHABLE);
                 })
                 .onErrorMap(Exception.class, e -> {
                     log.error("General WebClient Error: {}", e.getMessage());
                     // 그 외 일반적인 연결 오류 시 CustomException 반환
-                    return new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE);
+                    return new CustomException(ErrorCode.URL_UNREACHABLE);
                 })
 
                 // 7. Mono를 CompletableFuture로 변환하여 최종 반환

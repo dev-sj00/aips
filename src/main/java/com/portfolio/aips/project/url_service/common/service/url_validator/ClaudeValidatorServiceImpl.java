@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.url_service.service.url_validator;
+package com.portfolio.aips.project.url_service.common.service.url_validator;
 
 
 import com.portfolio.aips.project.exception.CustomException;
@@ -42,7 +42,7 @@ public class ClaudeValidatorServiceImpl implements UrlValidatorService{
                 .retrieve()
                 .onStatus(status -> !status.is2xxSuccessful(), response ->
                         response.bodyToMono(String.class)
-                                .flatMap(body -> Mono.error(new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE)))
+                                .flatMap(body -> Mono.error(new CustomException(ErrorCode.URL_UNREACHABLE)))
                 )
                 // 압축 여부 상관없이 raw bytes로 읽기
                 .bodyToMono(byte[].class)
@@ -51,7 +51,7 @@ public class ClaudeValidatorServiceImpl implements UrlValidatorService{
                     return new String(bytes, StandardCharsets.UTF_8);
                 })
                 .onErrorMap(WebClientResponseException.class, e -> e)
-                .onErrorMap(Exception.class, e -> new CustomException(ErrorCode.ARCHIVE_URL_UNREACHABLE))
+                .onErrorMap(Exception.class, e -> new CustomException(ErrorCode.URL_UNREACHABLE))
                 .toFuture();
 
 //        HttpHeaders headers = new HttpHeaders();

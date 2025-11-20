@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.url_service.service.url_validator.enums;
+package com.portfolio.aips.project.url_service.common.service.url_validator.enums;
 
 import lombok.Getter;
 

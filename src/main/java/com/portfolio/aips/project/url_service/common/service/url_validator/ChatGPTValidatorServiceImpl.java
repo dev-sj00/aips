@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.url_service.service.url_validator;
+package com.portfolio.aips.project.url_service.common.service.url_validator;
 
 import com.portfolio.aips.project.utils.enums.LLMValidBodyValue;
 import lombok.extern.slf4j.Slf4j;

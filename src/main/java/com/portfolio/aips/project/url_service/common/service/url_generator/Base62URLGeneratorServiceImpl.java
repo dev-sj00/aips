@@ -1,14 +1,16 @@
-package com.portfolio.aips.project.url_service.service.url_generator;
+package com.portfolio.aips.project.url_service.common.service.url_generator;
 
 import com.portfolio.aips.project.url_service.archive.repo.ArchiveRepository;
-import com.portfolio.aips.project.url_service.service.url_generator.enums.URLGeneratorType;
+import com.portfolio.aips.project.url_service.common.service.url_generator.enums.URLGeneratorType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class Base62URLGeneratorServiceImpl implements URLGeneratorService {
     private final ArchiveRepository archiveRepository;
 
@@ -25,6 +27,7 @@ public class Base62URLGeneratorServiceImpl implements URLGeneratorService {
 
             String code = Base62.encode(mod);
             url = getStarsWithByUrlType(urlType) + code;
+            log.info("url {}", url);
         }while (existsByUrlType(url, urlType));
 
         return url; // -> /s/Ab23Cs, /p/32B97F

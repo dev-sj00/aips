@@ -2,6 +2,7 @@ package com.portfolio.aips.project.url_service.archive.entity;
 
 
 import com.portfolio.aips.project.tags.entity.BoardTagsEntity;
+import com.portfolio.aips.project.url_service.common.entity.URLStatusEntity;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -28,11 +29,12 @@ public class ArchiveEntity {
     @Column(name = "title", nullable = false, length = 100)
     private String title;
 
-    @Column(name = "archive_link", nullable = false, length = 255)
-    private String archiveLink; // 아카이브 링크
 
-    @Column(name = "site_alive", nullable = false)
-    private boolean siteAlive = true; // 현재 페이지가 살아있는지
+    @OneToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL,  orphanRemoval = true)
+    private URLStatusEntity urlStatusEntity;
+
+    @Column(length=200)
+    private String description;
 
     @Column(name = "site_slug", nullable = false, unique = true, length = 255)
     private String siteSlug;
