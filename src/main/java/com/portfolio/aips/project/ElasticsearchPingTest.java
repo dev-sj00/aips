@@ -15,8 +15,6 @@ public class ElasticsearchPingTest {
 
     @PostConstruct
     public void ping() {
-        boolean isAvailable = elasticsearchOperations.indexOps(TestDocument.class).exists();
-        System.out.println("Elasticsearch 연결 가능 여부: " + isAvailable);
     }
 
 }
