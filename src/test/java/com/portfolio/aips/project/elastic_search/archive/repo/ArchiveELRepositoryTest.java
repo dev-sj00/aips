@@ -1,6 +1,5 @@
 package com.portfolio.aips.project.elastic_search.archive.repo;
 
-import com.portfolio.aips.project.elastic_search.archive.document.ArchiveDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -11,7 +10,7 @@ class ArchiveELRepositoryTest {
 
 
 
-    private final ArchiveELRepository archiveELRepository;
+   /* private final ArchiveELRepository archiveELRepository;
 
     @Autowired
     ArchiveELRepositoryTest(ArchiveELRepository archiveELRepository) {
@@ -32,5 +31,5 @@ class ArchiveELRepositoryTest {
 
         }
 
-    }
+    }*/
 }

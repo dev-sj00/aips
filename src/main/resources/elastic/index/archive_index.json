@@ -1,0 +1,59 @@
+{
+  "settings" : {
+    "index.max_ngram_diff": 10,
+    "number_of_shards" : 1,
+    "number_of_replicas" : 0,
+    "analysis": {
+      "analyzer": {
+        "autocomplete_analyzer": {
+          "tokenizer": "autocomplete_tokenizer",
+
+          "filter": ["lowercase"]
+        }
+      },
+      "tokenizer": {
+        "autocomplete_tokenizer": {
+          "type": "ngram",
+          "min_gram": 2,
+          "max_gram": 5,
+          "token_chars": ["letter", "digit"]
+        }
+      }
+    }
+  },
+
+  "mappings": {
+    "properties" : {
+      "pk" : {"type" :  "keyword"},
+      "title" : {"type" :  "text",
+        "analyzer": "autocomplete_analyzer",
+        "search_analyzer": "keyword",
+        "fields": {
+          "exact": { "type": "keyword" }
+        }
+      },
+      "urlStatus" :  {"type" :  "keyword"},
+      "description" : {
+        "type":  "text",
+        "analyzer": "autocomplete_analyzer",
+        "search_analyzer": "keyword",
+        "fields": {
+          "exact": { "type": "keyword" }
+        }
+      },
+      "siteSlug" : {"type" :  "keyword"},
+      "createdDateTime" : {"type":  "date", "format":  "strict_date_optional_time||epoch_millis"},
+      "userPk": {"type" :  "long"},
+      "popularityScore" : {"type" :  "long"},
+      "tags": {
+        "type": "text",
+        "analyzer": "autocomplete_analyzer",
+        "search_analyzer": "keyword",
+        "fields": {
+          "exact": { "type": "keyword" }
+        }
+      }
+
+    }
+  }
+}
