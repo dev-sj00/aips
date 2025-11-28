@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.elastic_search.archive.document;
+package com.portfolio.aips.project.elastic_search.archive.dto;
 
 import com.portfolio.aips.project.url_service.common.enums.URLStatus;
 import lombok.Data;

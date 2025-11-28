@@ -23,70 +23,74 @@ public class ArchiveELAutoCompleteServiceImpl implements ArchiveELAutoCompleteSe
     private final ObjectMapper objectMapper;
 
     @Override
-    public List<String> autocomplete(String keyword) throws URISyntaxException, IOException {
-        String jsonTemplate = ESTemplateUtils.loadJson("elastic/queries/archive_autocomplete.json");
-        String jsonQuery = String.format(jsonTemplate, keyword, keyword, keyword);
+    public List<String> autocomplete(String keyword)  {
+        try {
+            String jsonTemplate = ESTemplateUtils.loadJson("elastic/queries/archive_autocomplete.json");
+            String jsonQuery = String.format(jsonTemplate, keyword);
 
-        Response response = ESTemplateUtils.responseBuilder(client)
-                .body(jsonQuery)
-                .url("/archive/_search")
-                .method("POST")
-                .execute();
+            Response response = ESTemplateUtils.responseBuilder(client)
+                    .body(jsonQuery)
+                    .url("/archive/_search")
+                    .method("POST")
+                    .execute();
 
-        Map<String, Object> root = objectMapper.readValue(
-                response.getEntity().getContent(),
-                new TypeReference<>() {
-                }
-        );
+            Map<String, Object> root = objectMapper.readValue(
+                    response.getEntity().getContent(),
+                    new TypeReference<>() {}
+            );
 
-        Object innerHitsObj = ((Map<?, ?>) root.get("hits")).get("hits");
+            Object innerHitsObj = ((Map<?, ?>) root.get("hits")).get("hits");
+            List<Map<String, Object>> hits = objectMapper.convertValue(
+                    innerHitsObj,
+                    new TypeReference<>() {}
+            );
 
-        
-        //타입 안전하게 변환 convertValue + TypeReference
-        List<Map<String, Object>> hits = objectMapper.convertValue(
-                innerHitsObj,
-                new TypeReference<>() {
-                }
-        );
+            log.info("hits: {}", hits.toString());
 
-        log.info("hits {}", hits);
+            return collectAutocompleteResults(hits, keyword);
 
+        } catch (Exception e) {
+            log.error("자동완성 조회 실패: keyword={}", keyword, e);
+            return List.of();
+        }
+
+
+    }
+
+    private List<String> collectAutocompleteResults(List<Map<String, Object>> hits, String keyword) {
         Set<String> results = new LinkedHashSet<>();
 
         for (Map<String, Object> hit : hits) {
+            if (results.size() >= 9) break;
 
-            // "_source" 를 완전 타입 안전하게 변환
             Map<String, Object> source = objectMapper.convertValue(
                     hit.get("_source"),
-                    new TypeReference<>() {
-                    }
+                    new TypeReference<>() {}
             );
 
-            //title
+
+            // title
             Optional.ofNullable(source.get("title"))
                     .map(String::valueOf)
-                    .filter(title -> title.contains(keyword)) // 검색어 포함 여부 확인
+                    .filter(value -> value.contains(keyword))
                     .ifPresent(results::add);
 
-            // tags : Object → List<String> 안전 변환
+            // tags
             Optional.ofNullable(source.get("tags"))
                     .map(value -> objectMapper.convertValue(value, new TypeReference<List<String>>() {}))
                     .orElseGet(List::of)
                     .stream()
                     .filter(tag -> tag.contains(keyword))
-                    .forEach(results::add);  // 포함된 값만 results에 추가
+                    .forEach(results::add);
 
+            // description
             Optional.ofNullable(source.get("description"))
                     .map(String::valueOf)
-                    .filter(title -> title.contains(keyword)) // 검색어 포함 여부 확인
+                    .filter(value -> value.contains(keyword))
                     .ifPresent(results::add);
-
-            if (results.size() >= 9) break;
         }
 
-
         return results.stream().limit(9).toList();
-
-
     }
+
 }

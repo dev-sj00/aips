@@ -14,9 +14,9 @@
       "tokenizer": {
         "autocomplete_tokenizer": {
           "type": "ngram",
-          "min_gram": 2,
-          "max_gram": 5,
-          "token_chars": ["letter", "digit"]
+          "min_gram": 1,
+          "max_gram": 10,
+          "token_chars": ["letter", "digit", "whitespace"]
         }
       }
     }
@@ -26,29 +26,28 @@
     "properties" : {
       "pk" : {"type" :  "keyword"},
       "title" : {"type" :  "text",
-        "analyzer": "autocomplete_analyzer",
-        "search_analyzer": "keyword",
-        "fields": {
-          "exact": { "type": "keyword" }
-        }
+        "copy_to": "auto_complete"
       },
+
       "urlStatus" :  {"type" :  "keyword"},
       "description" : {
         "type":  "text",
-        "analyzer": "autocomplete_analyzer",
-        "search_analyzer": "keyword",
-        "fields": {
-          "exact": { "type": "keyword" }
-        }
+        "copy_to": "auto_complete"
       },
+
       "siteSlug" : {"type" :  "keyword"},
       "createdDateTime" : {"type":  "date", "format":  "strict_date_optional_time||epoch_millis"},
       "userPk": {"type" :  "long"},
       "popularityScore" : {"type" :  "long"},
       "tags": {
         "type": "text",
+        "copy_to": "auto_complete"
+      },
+
+      "auto_complete": {
+        "type": "text",
         "analyzer": "autocomplete_analyzer",
-        "search_analyzer": "keyword",
+        "search_analyzer": "autocomplete_analyzer",
         "fields": {
           "exact": { "type": "keyword" }
         }

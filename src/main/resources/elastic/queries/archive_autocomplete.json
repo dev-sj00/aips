@@ -4,7 +4,7 @@
   "query": {
     "multi_match": {
       "query": "%s",
-      "fields": ["title^8", "description^2", "tags^5"]
+      "fields": ["auto_complete"]
     }
   },
   "sort": [

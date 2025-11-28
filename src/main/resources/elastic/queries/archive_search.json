@@ -1,0 +1,33 @@
+{
+  "query" : {
+    "bool" : {
+      "should" : [
+        {
+          "multi_match": {
+            "query": "%s",
+            "fields": [
+              "title^3",
+              "description",
+              "tags^2"
+            ],
+            "type": "best_fields",
+            "fuzziness": "AUTO",
+            "prefix_length": 1,
+            "operator": "or"
+          }
+        }
+
+      ],
+      "minimum_should_match" : 1
+    }
+  },
+  "highlight" : {
+    "fields" : {
+      "title" : {},
+      "description" : {}
+    },
+
+    "pre_tags" : ["<em>"],
+    "post_tags" : ["</em>"]
+  }
+}

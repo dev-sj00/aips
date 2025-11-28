@@ -1,6 +1,6 @@
 package com.portfolio.aips.project.elastic_search.archive.service;
 
-import com.portfolio.aips.project.elastic_search.archive.document.ArchiveDocument;
+import com.portfolio.aips.project.elastic_search.archive.dto.ArchiveDocument;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el.ArchiveELService;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_auto_complete.ArchiveELAutoCompleteService;
 import org.junit.jupiter.api.Test;
@@ -9,7 +9,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.List;
 
 @SpringBootTest
@@ -34,7 +33,7 @@ class ArchiveELAutoCompleteServiceTest {
         archiveELService.save(archiveDocument);
 
         archiveDocument.setTitle("abc2");
-        archiveDocument.setDescription("fgvwefewfw");
+        archiveDocument.setDescription("fgvwefewfw2");
         archiveDocument.setPopularityScore(1L);
         archiveDocument.setTags(List.of("책상", "abc abc"));
 
@@ -49,14 +48,17 @@ class ArchiveELAutoCompleteServiceTest {
 
         
 
-        List<String> result = archiveELAutoCompleteService.autocomplete("책상");
+        List<String> result = archiveELAutoCompleteService.autocomplete("책상 서");
 
 
 
         for(String s : result)
         {
-            System.out.println("result: " + s);
+            System.out.println("자동 완성 result: " + s);
         }
+
+        archiveELService.search("fgvwefewfw");
+
         
     }
 }
