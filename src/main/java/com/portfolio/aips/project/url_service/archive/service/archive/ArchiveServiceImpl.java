@@ -15,9 +15,12 @@ import com.portfolio.aips.project.url_service.common.service.url_generator.enums
 import com.portfolio.aips.project.url_service.common.service.url_status.URLStatusService;
 import com.portfolio.aips.project.users.dto.CustomUserDetails;
 
+import com.portfolio.aips.project.utils.enums.LLMType;
+import com.portfolio.aips.project.utils.enums.LLMUrlPrefix;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -34,6 +37,7 @@ public class ArchiveServiceImpl implements ArchiveService {
 
 
     @Override
+    @Transactional
     public long createArchive(CreateArchiveRequest request, CustomUserDetails customUserDetails) {
         //검증 -> 사이트
         //
@@ -43,11 +47,26 @@ public class ArchiveServiceImpl implements ArchiveService {
         String newSiteSlug = urlGeneratorService.createUrlProc(userPk, URLGeneratorType.Archive);
         //fk addUser
         ArchiveEntity archiveEntity = getNewArchiveEntity(request, newSiteSlug, userPk);
+
+        updateUrlStatus(request,  archiveEntity);
+
+
+
         //db 저장
         archiveRepository.save(archiveEntity);
 
         return archiveEntity.getPk();
     }
+
+    private void updateUrlStatus(CreateArchiveRequest request, ArchiveEntity archiveEntity) {
+        URLStatusEntity urlStatusEntity = urlStatusRepository
+                .findByIsCreatedAndUrlLink(false, request.urlLink())
+                .orElseThrow(() -> new CustomException(ErrorCode.URL_NOT_FOUND));
+
+        urlStatusEntity.setCreated(true);
+        archiveEntity.setUrlStatusEntity(urlStatusEntity);
+    }
+
 
     private ArchiveEntity getNewArchiveEntity(CreateArchiveRequest request, String siteSlug, long userPk){
         ArchiveEntity archiveEntity = new ArchiveEntity();
@@ -55,16 +74,8 @@ public class ArchiveServiceImpl implements ArchiveService {
         archiveEntity.setSiteSlug(siteSlug);
         archiveEntity.setDescription(request.description());
         archiveEntity.setUserPk(userPk);
+        archiveEntity.setLlmType(LLMType.valueOf(LLMUrlPrefix.findKeyByUrl(request.urlLink())));
 
-
-
-        URLStatusEntity urlStatusEntity = urlStatusRepository
-                .findByIsCreatedAndUrlLink(false, request.urlLink())
-                .orElseThrow(() -> new CustomException(ErrorCode.URL_NOT_FOUND));
-
-        urlStatusEntity.setCreated(true);
-
-        archiveEntity.setUrlStatusEntity(urlStatusEntity);
 
         return archiveEntity;
 

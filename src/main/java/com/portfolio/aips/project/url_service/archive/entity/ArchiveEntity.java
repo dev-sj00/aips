@@ -2,8 +2,10 @@ package com.portfolio.aips.project.url_service.archive.entity;
 
 
 import com.portfolio.aips.project.tags.entity.BoardTagsEntity;
+import com.portfolio.aips.project.url_service.common.entity.URLServiceBaseEntity;
 import com.portfolio.aips.project.url_service.common.entity.URLStatusEntity;
 import com.portfolio.aips.project.users.entity.UsersEntity;
+import com.portfolio.aips.project.utils.enums.LLMType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,30 +20,15 @@ import java.util.List;
 @Entity
 @Setter
 @Getter
-@EntityListeners(AuditingEntityListener.class)
-public class ArchiveEntity {
+public class ArchiveEntity extends URLServiceBaseEntity {
 
     @Id
     @Column(name = "archive_pk")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pk;
 
-    @Column(name = "title", nullable = false, length = 100)
-    private String title;
-
-
     @OneToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL,  orphanRemoval = true)
     private URLStatusEntity urlStatusEntity;
-
-    @Column(length=200)
-    private String description;
-
-    @Column(name = "site_slug", nullable = false, unique = true, length = 255)
-    private String siteSlug;
-
-    @CreatedDate
-    @Column(name = "created_date_time", updatable = false)
-    private LocalDateTime createdDateTime;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
     @JoinColumn(name = "user_pk")

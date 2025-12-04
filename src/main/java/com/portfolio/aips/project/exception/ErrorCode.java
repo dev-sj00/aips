@@ -16,8 +16,10 @@ public enum ErrorCode {
     INVALID_SOCIAL_REFRESH_TOKEN(HttpStatus.CONFLICT, "ACCOUNT-006", "SNS 로그인 토큰 문제로 로그아웃되었습니다."),
     URL_UNREACHABLE(HttpStatus.BAD_REQUEST, "URL-VERIFY-001", "LLM 사이트에 문제가 생겼습니다."),
     URL_NOT_FOUND(HttpStatus.NOT_FOUND, "URL-VERIFY-002", "LLM 사이트 대화 정보를 찾지 못했습니다!"),
-    URL_ALREADY_EXISTS(HttpStatus.CONFLICT, "URL-VERIFY-003", "LLM 사이트가 이미 등록 되었습니다!");
-    
+    URL_ALREADY_EXISTS(HttpStatus.CONFLICT, "URL-VERIFY-003", "LLM 사이트가 이미 등록 되었습니다!"),
+    INVALID_URL_PASSWORD(HttpStatus.UNAUTHORIZED, "URL-VERIFY-004", "비밀번호가 맞지 않습니다!"),
+    URL_FORBIDDEN_USER(HttpStatus.FORBIDDEN, "URL-VERIFY-005", "허가되지 않은 사용자입니다");
+
     private final HttpStatus httpStatus;
     private final String code;
     private final String detail;
