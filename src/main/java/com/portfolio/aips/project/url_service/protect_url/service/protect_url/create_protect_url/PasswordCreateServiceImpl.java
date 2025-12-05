@@ -33,7 +33,7 @@ public class PasswordCreateServiceImpl extends ProtectURLCreateService<PasswordC
 
         ProtectURLEntity protectURLEntity = createProtectURLEntity(createProtectURLRequest, customUserDetails);
 
-        //updateUrlStatus(createProtectURLRequest, protectURLEntity);
+        updateUrlStatus(createProtectURLRequest, protectURLEntity);
 
         URLStatusEntity urlStatusEntity = urlStatusRepository
                 .findByIsCreatedAndUrlLink(false, createProtectURLRequest.getUrlLink())

@@ -12,8 +12,8 @@ public interface ProtectURLRepository extends JpaRepository<ProtectURLEntity, Lo
 
     @Query("""
     SELECT DISTINCT p FROM protect_url p
-    JOIN FETCH p.protectURLInvitedEntity pie
-    JOIN FETCH pie.users u
+    JOIN FETCH p.inviteUserListEntity ivu
+    JOIN FETCH ivu.userEntity u
     WHERE p.pk = :pk
       AND u.pk = :userPk
     """)

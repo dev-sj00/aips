@@ -2,16 +2,17 @@ package com.portfolio.aips.project.url_service.protect_url.service.protect_url.c
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.url_service.archive.dto.request.CreateArchiveRequest;
-import com.portfolio.aips.project.url_service.archive.entity.ArchiveEntity;
+import com.portfolio.aips.project.invite.entity.InviteEntity;
+import com.portfolio.aips.project.invite.enums.InviteType;
+import com.portfolio.aips.project.invite.repo.InviteRepository;
+import com.portfolio.aips.project.invite.repo.InviteUserListRepository;
 import com.portfolio.aips.project.url_service.common.entity.URLStatusEntity;
 import com.portfolio.aips.project.url_service.common.repo.URLStatusRepository;
 import com.portfolio.aips.project.url_service.common.service.url_generator.URLGeneratorService;
 import com.portfolio.aips.project.url_service.common.service.url_generator.enums.URLGeneratorType;
 import com.portfolio.aips.project.url_service.protect_url.dto.request.InvitedUserCreateRequest;
 import com.portfolio.aips.project.url_service.protect_url.entity.ProtectURLEntity;
-import com.portfolio.aips.project.url_service.protect_url.entity.ProtectURLInvitedEntity;
-import com.portfolio.aips.project.url_service.protect_url.repo.ProtectURLInvitedRepository;
+import com.portfolio.aips.project.invite.entity.InviteUserListEntity;
 import com.portfolio.aips.project.url_service.protect_url.repo.ProtectURLRepository;
 import com.portfolio.aips.project.users.dto.CustomUserDetails;
 import com.portfolio.aips.project.utils.enums.LLMType;
@@ -29,9 +30,11 @@ import java.util.List;
 
 public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<InvitedUserCreateRequest> {
     private final ProtectURLRepository protectURLRepository;
-    private final ProtectURLInvitedRepository protectURLInvitedRepository;
+    private final InviteRepository inviteRepository;
+    private final InviteUserListRepository inviteUserListRepository;
     private final URLGeneratorService  urlGeneratorService;
     private final URLStatusRepository urlStatusRepository;
+    private final EntityManager entityManager;
 
 
     @Override
@@ -40,18 +43,31 @@ public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<Invite
         ProtectURLEntity protectURLEntity = createProtectURLEntity(createProtectURLRequest, customUserDetails);
         protectURLRepository.save(protectURLEntity);
 
-        List<ProtectURLInvitedEntity> protectURLInvitedEntities = new ArrayList<>();
+        List<InviteUserListEntity> invitedUserListEntities = new ArrayList<>();
+
+
+        InviteEntity invite = inviteRepository
+                .findByOwnerUserPkAndTargetType(customUserDetails.getPk(), InviteType.Protect)
+                .orElseGet(() -> {
+                    InviteEntity newInvite = new InviteEntity();
+                    newInvite.setOwnerUserPk(customUserDetails.getPk()); // FK 값 세팅
+                    newInvite.setTargetType(InviteType.Protect);
+                    newInvite.setMaxInviteCount(20); // 필요 시 기본값 세팅
+                    return inviteRepository.save(newInvite); // DB에 저장
+                });
+
+
 
         for(long invitedUserPk : createProtectURLRequest.getInvitedUserPkList())
         {
-            ProtectURLInvitedEntity protectURLInvitedEntity = new ProtectURLInvitedEntity();
-            protectURLInvitedEntity.setInvitedUserPk(invitedUserPk);
-            protectURLInvitedEntity.setProtectUrlPk(protectURLEntity.getPk());
-
-            protectURLInvitedEntities.add(protectURLInvitedEntity);
+            InviteUserListEntity inviteUserListEntity = new InviteUserListEntity();
+            inviteUserListEntity.setUserPk(invitedUserPk);
+            inviteUserListEntity.setInvitePk(invite.getPk());
+            invitedUserListEntities.add(inviteUserListEntity);
 
         }
-        protectURLInvitedRepository.saveAll(protectURLInvitedEntities);
+        invite.setInviteUserLists(invitedUserListEntities);
+        inviteUserListRepository.saveAll(invitedUserListEntities);
 
         return protectURLEntity.getSiteSlug();
     }

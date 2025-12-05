@@ -1,5 +1,6 @@
 package com.portfolio.aips.project.url_service.protect_url.entity;
 
+import com.portfolio.aips.project.invite.entity.InviteUserListEntity;
 import com.portfolio.aips.project.url_service.common.entity.URLServiceBaseEntity;
 import com.portfolio.aips.project.url_service.common.entity.URLStatusEntity;
 import com.portfolio.aips.project.users.entity.UsersEntity;
@@ -33,8 +34,7 @@ public class ProtectURLEntity extends URLServiceBaseEntity {
 
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "protect_url_pk")
-    private List<ProtectURLInvitedEntity> protectURLInvitedEntity = new ArrayList<>();
+    private List<InviteUserListEntity> inviteUserListEntity = new ArrayList<>();
 
 
     @OneToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL,  orphanRemoval = true)
@@ -42,8 +42,8 @@ public class ProtectURLEntity extends URLServiceBaseEntity {
 
 
     //생성에서는 saveAll, 그 이후 친구추가는 이 메서드 사용
-    public void addProtectURLInvitedEntity(ProtectURLInvitedEntity protectURLInvitedEntity) {
-        this.protectURLInvitedEntity.add(protectURLInvitedEntity);
+    public void addProtectURLInvitedEntity(InviteUserListEntity protectURLInvitedEntity) {
+        this.inviteUserListEntity.add(protectURLInvitedEntity);
     }
 
 
