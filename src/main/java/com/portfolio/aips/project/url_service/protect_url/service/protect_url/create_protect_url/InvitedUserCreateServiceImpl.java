@@ -6,6 +6,7 @@ import com.portfolio.aips.project.invite.entity.InviteEntity;
 import com.portfolio.aips.project.invite.enums.InviteType;
 import com.portfolio.aips.project.invite.repo.InviteRepository;
 import com.portfolio.aips.project.invite.repo.InviteUserListRepository;
+import com.portfolio.aips.project.invite.service.Invite.InviteService;
 import com.portfolio.aips.project.url_service.common.entity.URLStatusEntity;
 import com.portfolio.aips.project.url_service.common.repo.URLStatusRepository;
 import com.portfolio.aips.project.url_service.common.service.url_generator.URLGeneratorService;
@@ -31,19 +32,17 @@ import java.util.List;
 public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<InvitedUserCreateRequest> {
     private final ProtectURLRepository protectURLRepository;
     private final InviteRepository inviteRepository;
-    private final InviteUserListRepository inviteUserListRepository;
     private final URLGeneratorService  urlGeneratorService;
     private final URLStatusRepository urlStatusRepository;
-    private final EntityManager entityManager;
+    private final InviteService inviteService;
 
 
     @Override
     @Transactional
-    public String createProtectUrlArchive(InvitedUserCreateRequest createProtectURLRequest, CustomUserDetails customUserDetails) {
-        ProtectURLEntity protectURLEntity = createProtectURLEntity(createProtectURLRequest, customUserDetails);
+    public String createProtectUrlArchive(InvitedUserCreateRequest request, CustomUserDetails customUserDetails) {
+        ProtectURLEntity protectURLEntity = createProtectURLEntity(request, customUserDetails);
+        updateUrlStatus(request, protectURLEntity);
         protectURLRepository.save(protectURLEntity);
-
-        List<InviteUserListEntity> invitedUserListEntities = new ArrayList<>();
 
 
         InviteEntity invite = inviteRepository
@@ -58,16 +57,7 @@ public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<Invite
 
 
 
-        for(long invitedUserPk : createProtectURLRequest.getInvitedUserPkList())
-        {
-            InviteUserListEntity inviteUserListEntity = new InviteUserListEntity();
-            inviteUserListEntity.setUserPk(invitedUserPk);
-            inviteUserListEntity.setInvitePk(invite.getPk());
-            invitedUserListEntities.add(inviteUserListEntity);
-
-        }
-        invite.setInviteUserLists(invitedUserListEntities);
-        inviteUserListRepository.saveAll(invitedUserListEntities);
+        inviteService.saveAll(invite.getPk(), request.getInvitedUserPkList());
 
         return protectURLEntity.getSiteSlug();
     }

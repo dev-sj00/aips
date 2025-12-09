@@ -26,6 +26,9 @@ public class InviteEntity {
     @Column(name="max_invite_count")
     private int maxInviteCount;
 
+    @Column(name="max_favorite_count")
+    private int maxFavoriteCount; // favoriteInviteFriends 최대
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="user_pk", insertable=false, updatable=false)
     private UsersEntity owner;
@@ -46,6 +49,12 @@ public class InviteEntity {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "invite_pk")
     private List<InviteUserListEntity> inviteUserLists = new ArrayList<>();
+
+
+    public void addFavoriteInviteFriend(FavoriteInviteFriendEntity favoriteInviteFriend) {
+        this.favoriteInviteFriends.add(favoriteInviteFriend);
+    }
+
 
 
 

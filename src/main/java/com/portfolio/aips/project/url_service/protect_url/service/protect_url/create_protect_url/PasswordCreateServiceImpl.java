@@ -35,11 +35,6 @@ public class PasswordCreateServiceImpl extends ProtectURLCreateService<PasswordC
 
         updateUrlStatus(createProtectURLRequest, protectURLEntity);
 
-        URLStatusEntity urlStatusEntity = urlStatusRepository
-                .findByIsCreatedAndUrlLink(false, createProtectURLRequest.getUrlLink())
-                .orElseThrow(() -> new CustomException(ErrorCode.URL_NOT_FOUND));
-
-        urlStatusEntity.setCreated(true);
 
         protectURLRepository.save(protectURLEntity);
 

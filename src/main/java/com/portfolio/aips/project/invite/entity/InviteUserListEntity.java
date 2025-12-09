@@ -14,12 +14,7 @@ public class InviteUserListEntity {
 
     @Id
     @Column(name = "invited_user_list_pk")
-/*    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "invited_user_list_seq")
-    @SequenceGenerator(
-            name = "invited_user_list_seq",
-            sequenceName = "invited_user_list_seq",
-            allocationSize = 20   // Hibernate batch size와 맞춰주는 게 좋음
-    ) 불필요*/
+
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pk;
 
@@ -33,6 +28,11 @@ public class InviteUserListEntity {
     @Column(name = "user_pk", nullable = false)
     private long userPk;
 
+
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "target_pk", insertable = false, updatable = false)
+    private UsersEntity targetUserEntity;
 
     @Column(name = "target_pk", nullable = false)
     private long targetPk;

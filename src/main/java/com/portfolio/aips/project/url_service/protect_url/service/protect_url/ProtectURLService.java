@@ -6,5 +6,5 @@ import com.portfolio.aips.project.users.dto.CustomUserDetails;
 public interface ProtectURLService {
 
     <T extends BaseCreateProtectURLRequest> String createProtectUrl(T requestDTO, CustomUserDetails customUserDetails);
-
+    
 }
