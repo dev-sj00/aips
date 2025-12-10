@@ -2,8 +2,8 @@ package com.portfolio.aips.project.invite.service.FavoriteInviteFriend;
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.invite.dto.command.AddFavoriteFriendCommand;
-import com.portfolio.aips.project.invite.dto.command.DeleteFavoriteFriendCommand;
+import com.portfolio.aips.project.invite.service.FavoriteInviteFriend.command.AddFavoriteFriendCommand;
+import com.portfolio.aips.project.invite.service.FavoriteInviteFriend.command.DeleteFavoriteFriendCommand;
 import com.portfolio.aips.project.invite.entity.FavoriteInviteFriendEntity;
 import com.portfolio.aips.project.invite.entity.InviteEntity;
 import com.portfolio.aips.project.invite.enums.InviteType;

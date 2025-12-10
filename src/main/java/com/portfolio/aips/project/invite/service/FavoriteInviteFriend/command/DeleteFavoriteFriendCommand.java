@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.invite.dto.command;
+package com.portfolio.aips.project.invite.service.FavoriteInviteFriend.command;
 
 import com.portfolio.aips.project.invite.enums.InviteType;
 

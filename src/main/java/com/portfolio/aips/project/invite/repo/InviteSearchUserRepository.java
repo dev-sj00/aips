@@ -6,5 +6,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 public interface InviteSearchUserRepository extends JpaRepository<UsersEntity, Long> {
-    Optional<UsersEntity> findByNicknameStartingWith(String nickName);
+    Optional<UsersEntity> findByNickname(String nickName);
 }

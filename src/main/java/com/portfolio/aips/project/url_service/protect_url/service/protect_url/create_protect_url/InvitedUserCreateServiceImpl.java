@@ -20,6 +20,7 @@ import com.portfolio.aips.project.utils.enums.LLMType;
 import com.portfolio.aips.project.utils.enums.LLMUrlPrefix;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,8 @@ import java.util.List;
 @Service("InvitedUserCreateService")
 @RequiredArgsConstructor
 
+
+@Slf4j
 public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<InvitedUserCreateRequest> {
     private final ProtectURLRepository protectURLRepository;
     private final InviteRepository inviteRepository;
@@ -39,6 +42,7 @@ public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<Invite
 
     @Override
     @Transactional
+
     public String createProtectUrlArchive(InvitedUserCreateRequest request, CustomUserDetails customUserDetails) {
         ProtectURLEntity protectURLEntity = createProtectURLEntity(request, customUserDetails);
         updateUrlStatus(request, protectURLEntity);
@@ -47,12 +51,9 @@ public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<Invite
 
         InviteEntity invite = inviteRepository
                 .findByOwnerUserPkAndTargetType(customUserDetails.getPk(), InviteType.Protect)
-                .orElseGet(() -> {
-                    InviteEntity newInvite = new InviteEntity();
-                    newInvite.setOwnerUserPk(customUserDetails.getPk()); // FK 값 세팅
-                    newInvite.setTargetType(InviteType.Protect);
-                    newInvite.setMaxInviteCount(20); // 필요 시 기본값 세팅
-                    return inviteRepository.save(newInvite); // DB에 저장
+                .orElseThrow(() -> {
+                   log.error("createProtectUrlArchive invitePk Not Found Error {}", customUserDetails.getPk());
+                   return new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
                 });
 
 

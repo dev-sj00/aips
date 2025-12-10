@@ -2,15 +2,17 @@ package com.portfolio.aips.project.invite.service.InviteHistory;
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.invite.dto.command.AddHistoryCommand;
+
 import com.portfolio.aips.project.invite.entity.InviteEntity;
 import com.portfolio.aips.project.invite.entity.InviteHistoryEntity;
 import com.portfolio.aips.project.invite.enums.InviteType;
 import com.portfolio.aips.project.invite.repo.InviteHistoryRepository;
 import com.portfolio.aips.project.invite.repo.InviteRepository;
+import com.portfolio.aips.project.invite.service.InviteHistory.command.DeleteHistoryCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,7 +27,7 @@ public class InviteHistoryServiceImpl implements InviteHistoryService {
 
     @Override
     public List<InviteHistoryEntity> findAllHistory(long ownerUserPk, InviteType targetType) {
-        InviteEntity inviteEntity = inviteRepository.findWithFavoritesByOwnerUserPkAndTargetType(ownerUserPk, targetType)
+        InviteEntity inviteEntity = inviteRepository.findWithHistoryByOwnerUserPkAndTargetType(ownerUserPk, targetType)
                 .orElseThrow(() ->
                 {
                     log.error("pk : {} targetType : {} NOT FOUND InviteEntity ", ownerUserPk, targetType);
@@ -35,16 +37,19 @@ public class InviteHistoryServiceImpl implements InviteHistoryService {
         return inviteEntity.getInviteHistory();
     }
 
-    @Override
-    public void addHistory(AddHistoryCommand command) { //inviteUser 검색 후 위 서비스 실행
-        InviteHistoryEntity inviteHistoryEntity = new InviteHistoryEntity();
-        inviteHistoryEntity.setInvitePk(command.invitePk());
-        inviteHistoryEntity.setUserPk(command.targetUserPk());
-        inviteHistoryRepository.save(inviteHistoryEntity);
+
+    @Transactional
+    public void deleteHistory(DeleteHistoryCommand command) {
+        int isDelete = inviteHistoryRepository.deleteHistoryByOwnerPkAndInviteTypeAndHistoryPk(command.ownerUserPk(), command.targetType(), command.targetUserPk());
+
+        if(isDelete == 0 )
+        {
+            throw new CustomException(ErrorCode.DELETE_INVITE_HISTORY_NOT_FOUND);
+        }
+
+
+
     }
 
-    @Override
-    public void deleteHistory(long invitePk, long targetUserPk) {
-        inviteHistoryRepository.deleteByInvitePkAndUserPk(invitePk, targetUserPk);
-    }
+
 }
