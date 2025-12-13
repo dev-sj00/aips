@@ -24,6 +24,21 @@ repositories {
 	mavenCentral()
 }
 
+
+def querydslDir = "$buildDir/generated/querydsl"
+
+sourceSets {
+    main {
+        java {
+            srcDirs += [querydslDir]
+        }
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
+}
+
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
@@ -43,6 +58,23 @@ dependencies {
     implementation 'io.jsonwebtoken:jjwt-jackson:0.12.3'
     implementation 'org.springframework.session:spring-session-core'
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    implementation 'org.springframework.boot:spring-boot-starter-cache'
+    implementation 'org.ehcache:ehcache:3.9.9'
+    implementation 'org.hibernate.orm:hibernate-jcache:6.2.7.Final'
+    implementation 'javax.cache:cache-api:1.1.1'
+
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.0'
+
+    implementation "io.github.openfeign.querydsl:querydsl-jpa:6.11"
+    annotationProcessor "io.github.openfeign.querydsl:querydsl-apt:6.11:jakarta"
+
+    // JPA 사용하는 경우 필요
+    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+
+
+
 
 }
 

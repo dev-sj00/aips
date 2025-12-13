@@ -26,7 +26,7 @@ class InviteHistoryServiceTest {
     @Transactional
     void test()
     {
-        FindInviteUserInfoCommand findCommand = new FindInviteUserInfoCommand("익명", 2L, InviteType.Protect);
+        FindInviteUserInfoCommand findCommand = new FindInviteUserInfoCommand("익명", 2L);
         UsersEntity usersEntity = inviteService.findInviteUserInfoProc(findCommand);
 
 
@@ -37,7 +37,7 @@ class InviteHistoryServiceTest {
 
        for(InviteHistoryEntity inviteHistoryEntity : result)
        {
-           System.out.println(inviteHistoryEntity.getInvitePk());
+         /*  System.out.println(inviteHistoryEntity.getInvitePolicyPk());*/
        }
 
        inviteHistoryService.deleteHistory(new DeleteHistoryCommand(2L, 29, InviteType.Protect));

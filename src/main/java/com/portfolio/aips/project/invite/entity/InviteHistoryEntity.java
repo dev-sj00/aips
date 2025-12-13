@@ -14,7 +14,8 @@ import java.time.LocalDateTime;
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-public class InviteHistoryEntity {
+
+public class InviteHistoryEntity extends BaseInviteEntity{
 
     @Id
     @Column(name = "invite_history_pk")
@@ -23,24 +24,6 @@ public class InviteHistoryEntity {
 
 
 
-    @Column(name = "invite_pk", insertable = false, updatable = false)
-    private long invitePk;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "invite_pk")
-    private InviteEntity inviteEntity;
-
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_pk", insertable = false, updatable = false)
-    private UsersEntity usersEntity; //과거 검색한 유저 엔티티
-
-
-
-
-
-    @Column(name = "user_pk", nullable = false)
-    private long userPk;
 
 
 

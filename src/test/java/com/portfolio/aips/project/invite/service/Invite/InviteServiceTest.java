@@ -1,6 +1,5 @@
 package com.portfolio.aips.project.invite.service.Invite;
 
-import com.portfolio.aips.project.invite.entity.InviteEntity;
 import com.portfolio.aips.project.invite.enums.InviteType;
 import com.portfolio.aips.project.invite.service.Invite.command.FindInviteUserInfoCommand;
 import jakarta.persistence.EntityManager;
@@ -8,9 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.junit.jupiter.api.Assertions.*;
-
+import org.springframework.transaction.support.TransactionTemplate;
 
 
 @SpringBootTest
@@ -24,6 +21,10 @@ class InviteServiceTest {
     private EntityManager entityManager;
 
 
+    @Autowired
+    private TransactionTemplate transactionalTemplate;
+
+
     @Test
     @Transactional
     public void searchUserInfoProc_test()
@@ -31,12 +32,21 @@ class InviteServiceTest {
 
 
 
-        FindInviteUserInfoCommand command = new FindInviteUserInfoCommand("익명", 2L, InviteType.Protect);
+        FindInviteUserInfoCommand command = new FindInviteUserInfoCommand("익명", 2L);
 
-        for(int i=0; i<6; i++) {
-            inviteService.findInviteUserInfoProc(command);
-            entityManager.flush();
+
+        for(int i = 0; i < 6; i++) {
+            System.out.println(i+"번 실행");
+            transactionalTemplate.execute(status -> {
+                inviteService.findInviteUserInfoProc(command);
+                entityManager.flush();
+                return null; // 반환값 없음
+            });
         }
+
+
+
+
 
 
 

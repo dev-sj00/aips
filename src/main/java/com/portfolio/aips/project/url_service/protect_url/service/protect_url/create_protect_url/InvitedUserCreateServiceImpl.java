@@ -2,30 +2,25 @@ package com.portfolio.aips.project.url_service.protect_url.service.protect_url.c
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.invite.entity.InviteEntity;
+import com.portfolio.aips.project.invite.entity.InvitePolicyEntity;
 import com.portfolio.aips.project.invite.enums.InviteType;
-import com.portfolio.aips.project.invite.repo.InviteRepository;
-import com.portfolio.aips.project.invite.repo.InviteUserListRepository;
+import com.portfolio.aips.project.invite.repo.InvitePolicyRepository;
 import com.portfolio.aips.project.invite.service.Invite.InviteService;
+import com.portfolio.aips.project.invite.service.Invite.command.SaveAllCommand;
 import com.portfolio.aips.project.url_service.common.entity.URLStatusEntity;
 import com.portfolio.aips.project.url_service.common.repo.URLStatusRepository;
 import com.portfolio.aips.project.url_service.common.service.url_generator.URLGeneratorService;
 import com.portfolio.aips.project.url_service.common.service.url_generator.enums.URLGeneratorType;
 import com.portfolio.aips.project.url_service.protect_url.dto.request.InvitedUserCreateRequest;
 import com.portfolio.aips.project.url_service.protect_url.entity.ProtectURLEntity;
-import com.portfolio.aips.project.invite.entity.InviteUserListEntity;
 import com.portfolio.aips.project.url_service.protect_url.repo.ProtectURLRepository;
 import com.portfolio.aips.project.users.dto.CustomUserDetails;
 import com.portfolio.aips.project.utils.enums.LLMType;
 import com.portfolio.aips.project.utils.enums.LLMUrlPrefix;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Service("InvitedUserCreateService")
 @RequiredArgsConstructor
@@ -34,7 +29,7 @@ import java.util.List;
 @Slf4j
 public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<InvitedUserCreateRequest> {
     private final ProtectURLRepository protectURLRepository;
-    private final InviteRepository inviteRepository;
+    private final InvitePolicyRepository invitePolicyRepository;
     private final URLGeneratorService  urlGeneratorService;
     private final URLStatusRepository urlStatusRepository;
     private final InviteService inviteService;
@@ -49,8 +44,8 @@ public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<Invite
         protectURLRepository.save(protectURLEntity);
 
 
-        InviteEntity invite = inviteRepository
-                .findByOwnerUserPkAndTargetType(customUserDetails.getPk(), InviteType.Protect)
+        InvitePolicyEntity invite = invitePolicyRepository
+                .findByTargetType(InviteType.Protect)
                 .orElseThrow(() -> {
                    log.error("createProtectUrlArchive invitePk Not Found Error {}", customUserDetails.getPk());
                    return new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
@@ -58,7 +53,7 @@ public class InvitedUserCreateServiceImpl extends ProtectURLCreateService<Invite
 
 
 
-        inviteService.saveAll(invite.getPk(), request.getInvitedUserPkList());
+        inviteService.saveAll(new SaveAllCommand(invite.getPk(), customUserDetails.getPk(), request.getInvitedUserPkList()));
 
         return protectURLEntity.getSiteSlug();
     }

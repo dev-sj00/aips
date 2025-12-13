@@ -9,18 +9,5 @@ import org.springframework.data.repository.query.Param;
 
 public interface InviteHistoryRepository extends JpaRepository<InviteHistoryEntity,Long>
 {
-    @Modifying
-    @Query("""
-        delete from invite_history ih
-        where ih.pk = :historyPk
-        and ih.inviteEntity.ownerUserPk = :ownerUserPk
-        and ih.inviteEntity.targetType = :targetType
-"""
-    )
-
-
-    int deleteHistoryByOwnerPkAndInviteTypeAndHistoryPk(    @Param("ownerUserPk") long ownerUserPk,
-                                                            @Param("targetType") InviteType targetType,
-                                                            @Param("historyPk") long historyPk);
 
 }
