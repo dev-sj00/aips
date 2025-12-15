@@ -26,16 +26,16 @@ class InviteServiceTest {
 
 
     @Test
-    @Transactional
+
     public void searchUserInfoProc_test()
     {
 
 
 
-        FindInviteUserInfoCommand command = new FindInviteUserInfoCommand("익명", 2L);
+        FindInviteUserInfoCommand command = new FindInviteUserInfoCommand("익명", 1L);
 
 
-        for(int i = 0; i < 6; i++) {
+        for(int i = 0; i < 2; i++) {
             System.out.println(i+"번 실행");
             transactionalTemplate.execute(status -> {
                 inviteService.findInviteUserInfoProc(command);

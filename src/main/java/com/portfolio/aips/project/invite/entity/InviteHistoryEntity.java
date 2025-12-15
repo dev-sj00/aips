@@ -10,11 +10,14 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
-@Entity(name = "invite_history")
+@Table(
+        name = "invite_history",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"owner_user_pk" , "target_user_pk", "invite_policy_pk"})
+)
+@Entity
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
-
 public class InviteHistoryEntity extends BaseInviteEntity{
 
     @Id
@@ -30,6 +33,8 @@ public class InviteHistoryEntity extends BaseInviteEntity{
     @CreationTimestamp
     @Column(name = "created_date_time", nullable = false, updatable = false)
     private LocalDateTime createdAt;
+
+
 
 
 

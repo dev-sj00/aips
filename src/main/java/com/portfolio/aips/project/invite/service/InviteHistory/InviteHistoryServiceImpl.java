@@ -34,18 +34,34 @@ public class InviteHistoryServiceImpl implements InviteHistoryService {
 
     @Override
     public List<InviteHistoryEntity> findAllHistory(long ownerUserPk, InviteType targetType) {
-       return null;
+        QInviteHistoryEntity qHistory = QInviteHistoryEntity.inviteHistoryEntity;
+        InvitePolicyEntity qPolicy = invitePolicyService.findInvitePolicyByInviteType(InviteType.Protect);
+
+
+        return Optional
+                .ofNullable(queryFactory.selectFrom(qHistory)
+                .where(qHistory.invitePolicyPk.eq(qPolicy.getPk())).fetch()).orElseGet(List::of);
     }
 
 
     @Transactional
     public void deleteHistory(DeleteHistoryCommand command) {
-      /*  int isDelete = inviteHistoryRepository.deleteHistoryByOwnerPkAndInviteTypeAndHistoryPk(command.ownerUserPk(), command.targetType(), command.targetUserPk());
 
-        if(isDelete == 0 )
+        QInviteHistoryEntity inviteHistory = QInviteHistoryEntity.inviteHistoryEntity;
+
+        InvitePolicyEntity invitePolicy = invitePolicyService.findInvitePolicyByInviteType(InviteType.Protect);
+
+        long isDelete = queryFactory.delete(inviteHistory)
+                .where(inviteHistory.ownerUserPk.eq(command.ownerUserPk()),
+                        inviteHistory.invitePolicyPk.eq(invitePolicy.getPk()),
+                        inviteHistory.targetUserPk.eq(command.targetUserPk()))
+                .execute();
+
+        if(isDelete == 0)
         {
+            log.error("조작된 요청 사용자 pk {}  삭제 요청 pk {}", command.ownerUserPk(), command.targetUserPk());
             throw new CustomException(ErrorCode.DELETE_INVITE_HISTORY_NOT_FOUND);
-        }*/
+        }
 
 
 
@@ -57,16 +73,19 @@ public class InviteHistoryServiceImpl implements InviteHistoryService {
 
         InvitePolicyEntity invitePolicy = invitePolicyService.findInvitePolicyByInviteType(InviteType.Protect);
 
+        QInviteHistoryEntity qHistory = QInviteHistoryEntity.inviteHistoryEntity;
 
         // 2. InviteHistory 추가
-        InviteHistoryEntity inviteHistory = new InviteHistoryEntity();
+
+        inviteHistoryRepository.saveIfNotExists(command.ownerUserPk(), command.targetUserPk(), invitePolicy.getPk());
+       /* InviteHistoryEntity inviteHistory = new InviteHistoryEntity();
         inviteHistory.setOwnerUserPk(command.ownerUserPk());
         inviteHistory.setTargetUserPk(command.targetUserPk());
         inviteHistory.setInvitePolicyPk(invitePolicy.getPk());
-        inviteHistoryRepository.saveAndFlush(inviteHistory);
+        inviteHistoryRepository.save(inviteHistory);*/
 
         // 3. 조건에 맞는 History 조회 (가장 오래된 순)
-        QInviteHistoryEntity qHistory = QInviteHistoryEntity.inviteHistoryEntity;
+
         List<Long> historyPkList = queryFactory.select(qHistory.pk)
                 .from(qHistory)
                 .where(qHistory.invitePolicyPk.eq(invitePolicy.getPk())

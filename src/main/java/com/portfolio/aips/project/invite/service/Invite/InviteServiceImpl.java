@@ -52,6 +52,7 @@ public class InviteServiceImpl implements InviteService {
 
     @Override
     @Transactional
+    //본인 pk값이 targetPk가 되면안됨 controller에서 throw 처리
     public UsersEntity findInviteUserInfoProc(FindInviteUserInfoCommand command) {
 
         UsersEntity usersEntity = inviteSearchUserRepository.findByNickname(command.targetUserName())

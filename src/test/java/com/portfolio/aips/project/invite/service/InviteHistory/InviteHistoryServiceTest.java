@@ -35,13 +35,10 @@ class InviteHistoryServiceTest {
 
 
 
-       for(InviteHistoryEntity inviteHistoryEntity : result)
-       {
-         /*  System.out.println(inviteHistoryEntity.getInvitePolicyPk());*/
-       }
 
-       inviteHistoryService.deleteHistory(new DeleteHistoryCommand(2L, 29, InviteType.Protect));
+       inviteHistoryService.deleteHistory(new DeleteHistoryCommand(2L, 1, InviteType.Protect));
 
     }
+
 
 }

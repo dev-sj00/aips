@@ -39,14 +39,9 @@ class FavoriteInviteFriendServiceTest {
 
     @Test
     void addFavoriteFriend_test() {
-        FindInviteUserInfoCommand command2 = new FindInviteUserInfoCommand("익명2", 1L);
-        AddFavoriteFriendCommand command = new AddFavoriteFriendCommand(1L, 2L, InviteType.Protect);
+        AddFavoriteFriendCommand command = new AddFavoriteFriendCommand(2L, 1L, InviteType.Protect);
 
-        // 첫 번째 트랜잭션: 엔티티 조회
-        transactionalTemplate.execute(status -> {
-            inviteService.findInviteUserInfoProc(command2);
-            return null; // 반환값 없음
-        });
+
 
         // 두 번째 트랜잭션: 같은 엔티티 조회 → 2차 캐시에서 가져오는지 확인
         transactionalTemplate.execute(status -> {

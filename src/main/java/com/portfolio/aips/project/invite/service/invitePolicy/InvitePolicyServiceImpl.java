@@ -33,7 +33,7 @@ public class InvitePolicyServiceImpl implements InvitePolicyService{
             newPolicy.setMaxFavoriteCount(50); // 기본 최대 개수 설정
             newPolicy.setMaxHistoryCount(5);
             newPolicy.setMaxInviteCount(20);
-            return invitePolicyRepository.saveAndFlush(newPolicy);
+            return invitePolicyRepository.save(newPolicy);
         });
     }
 }

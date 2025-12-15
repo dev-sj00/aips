@@ -36,48 +36,51 @@ public class FavoriteInviteFriendServiceImpl implements FavoriteInviteFriendServ
 
     @Override
     @Transactional
+    //본인 pk값이 targetPk가 되면안됨 controller에서 throw 처리
     public void addFavoriteFriend(AddFavoriteFriendCommand command) {
+        try {
+            QFavoriteInviteFriendEntity qFavFriend = QFavoriteInviteFriendEntity.favoriteInviteFriendEntity;
+            Long currentFavInviteCount = Optional.ofNullable(
+                    queryFactory.select(qFavFriend.count())
+                            .from(qFavFriend)
+                            .where(qFavFriend.ownerUserPk.eq(command.ownerUserPk()))
+                            .fetchOne()
+            ).orElse(0L);
 
-        QFavoriteInviteFriendEntity qFavFriend = QFavoriteInviteFriendEntity.favoriteInviteFriendEntity;
-        Long currentFavInviteCount = Optional.ofNullable(
-                queryFactory.select(qFavFriend.count())
-                        .from(qFavFriend)
-                        .where(qFavFriend.ownerUserPk.eq(command.ownerUserPk()))
-                        .fetchOne()
-        ).orElse(0L);
+
+            QInvitePolicyEntity qPolicy = QInvitePolicyEntity.invitePolicyEntity;
+            Tuple invitePolicyResult = queryFactory
+                    .select(qPolicy.pk, qPolicy.maxFavoriteCount)
+                    .from(qPolicy)
+                    .where(qPolicy.targetType.eq(command.targetType()))
+                    .fetchOne();
+
+            if (invitePolicyResult == null) {
+                log.info("addFavoriteFriend: invitePolicyResult is null");
+                throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
+            }
+
+            Long maxFavInviteCount = Optional.ofNullable(invitePolicyResult.get(qPolicy.maxFavoriteCount))
+                    .map(Integer::longValue) // Integer → Long
+                    .orElse(0L);
+
+            Long invitePolicyPk = Optional.ofNullable(invitePolicyResult.get(qPolicy.pk)).orElse(0L);
 
 
-        QInvitePolicyEntity qPolicy = QInvitePolicyEntity.invitePolicyEntity;
-        Tuple invitePolicyResult = queryFactory
-                .select(qPolicy.pk, qPolicy.maxFavoriteCount)
-                .from(qPolicy)
-                .where(qPolicy.targetType.eq(command.targetType()))
-                .fetchOne();
+            if (currentFavInviteCount >= maxFavInviteCount) {
+                throw new CustomException(ErrorCode.MAX_FAVORITE_FRIEND_REACHED);
+            }
 
-        if(invitePolicyResult == null){
-            log.info("addFavoriteFriend: invitePolicyResult is null");
+
+            FavoriteInviteFriendEntity favoriteInviteFriendEntity = new FavoriteInviteFriendEntity();
+            favoriteInviteFriendEntity.setOwnerUserPk(command.ownerUserPk());
+            favoriteInviteFriendEntity.setInvitePolicyPk(invitePolicyPk);
+            favoriteInviteFriendEntity.setTargetUserPk(command.targetUserPk());
+            favoriteInviteFriendRepository.save(favoriteInviteFriendEntity);
+        }catch (Exception e){
+            log.error("addFavoriteFriend: ", e);
             throw new CustomException(ErrorCode.INTERNAL_SERVER_ERROR);
         }
-
-        Long maxFavInviteCount = Optional.ofNullable(invitePolicyResult.get(qPolicy.maxFavoriteCount))
-                .map(Integer::longValue) // Integer → Long
-                .orElse(0L);
-
-        Long invitePolicyPk = Optional.ofNullable(invitePolicyResult.get(qPolicy.pk)).orElse(0L);
-
-
-
-        if(currentFavInviteCount >= maxFavInviteCount){
-            throw new CustomException(ErrorCode.MAX_FAVORITE_FRIEND_REACHED);
-        }
-
-
-        FavoriteInviteFriendEntity favoriteInviteFriendEntity = new FavoriteInviteFriendEntity();
-        favoriteInviteFriendEntity.setOwnerUserPk(command.ownerUserPk());
-        favoriteInviteFriendEntity.setInvitePolicyPk(invitePolicyPk);
-        favoriteInviteFriendEntity.setTargetUserPk(command.targetUserPk());
-        favoriteInviteFriendRepository.save(favoriteInviteFriendEntity);
-
 
 
         
