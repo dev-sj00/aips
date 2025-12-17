@@ -17,4 +17,6 @@ public class ArchiveDocument {
     private Long userPk;
     private Long popularityScore;
     private List<String> tags;
+    private String llmType;
+    private String topic;
 }

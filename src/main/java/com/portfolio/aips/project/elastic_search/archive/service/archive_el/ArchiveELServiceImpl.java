@@ -40,45 +40,5 @@ public class ArchiveELServiceImpl implements ArchiveELService{
         }
     }
 
-    @Override
-    public void search(String keyword) throws IOException {
-        String template = new ClassPathResource("elastic/queries/archive_search.json")
-                .getContentAsString(StandardCharsets.UTF_8);
-
-        String json = String.format(template, keyword, keyword);
-
-        SearchResponse<ArchiveDocument> response = client.search(
-                s -> s.index("archive")
-                        .withJson(new StringReader(json)),
-                ArchiveDocument.class
-        );
-
-        log.info(response.toString());
-        List<ArchiveDocument> documents = response.hits().hits().stream().map(Hit::source).toList();
-
-        for(ArchiveDocument archiveDocument : documents){
-            log.info(archiveDocument.toString());
-        }
-
-
-        for (Hit<ArchiveDocument> hit : response.hits().hits()) {
-            ArchiveDocument doc = hit.source();
-            Map<String, List<String>> highlight = hit.highlight();
-
-            String titleHl = null;
-            String descHl = null;
-
-            if (highlight != null) {
-                titleHl = String.join(" ... ", highlight.getOrDefault("title", List.of()));
-                descHl = String.join(" ... ", highlight.getOrDefault("description", List.of()));
-            }
-
-            log.info("title = {}" , doc.getTitle());
-            log.info("title highlight = {}", titleHl);
-            log.info("description highlight = {}", descHl);
-
-
-        }
 
     }
-}

@@ -29,5 +29,7 @@
 
     "pre_tags" : ["<em>"],
     "post_tags" : ["</em>"]
-  }
+  },
+  "from": 0,
+  "size": 15
 }

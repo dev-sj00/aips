@@ -6,5 +6,5 @@ import java.io.IOException;
 
 public interface ArchiveELService {
     void save(ArchiveDocument archiveDocument);
-    void search(String keyword) throws IOException;
+
 }
