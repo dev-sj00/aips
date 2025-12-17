@@ -15,12 +15,15 @@ public class BoardTagsEntity {
     @Id
     @Column(name = "board_tags_pk")
 
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "board_tags_seq")
+/*    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "board_tags_seq")
     @SequenceGenerator(
             name = "board_tags_seq",
             sequenceName = "board_tags_seq",
             allocationSize = 50   // Hibernate batch size와 맞추기
-    )
+    )* 불필요/
+
+ */
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long pk;
 
 

@@ -12,11 +12,9 @@ public record CreateArchiveRequest(
         @CheckLLMUrl(message = "올바른 URL 링크를 입력해주세요.")
         String urlLink,
 
-
         @NotBlank(message = "제목 입력은 필수입니다.")
         @Size(max = 60, message = "제목은 최대 60자까지 가능합니다.")
         String title,
-
 
         @NotBlank
         List<String> tagNames,

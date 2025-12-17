@@ -28,7 +28,7 @@ public class Base62URLGeneratorServiceImpl implements URLGeneratorService {
             String code = Base62.encode(mod);
             url = getStarsWithByUrlType(urlType) + code;
             log.info("url {}", url);
-        }while (existsByUrlType(url, urlType));
+        }while (!existsByUrlType(url, urlType));
 
         return url; // -> /s/Ab23Cs, /p/32B97F
     }
@@ -36,6 +36,10 @@ public class Base62URLGeneratorServiceImpl implements URLGeneratorService {
 
     private boolean existsByUrlType(String url, URLGeneratorType urlType) {
 
+        if(url.equals("/p/") || url.equals("/s/"))
+        {
+            return false;
+        }
 
         return switch (urlType) {
             case Archive -> archiveRepository.existsBySiteSlug(url);
