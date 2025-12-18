@@ -34,12 +34,17 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
     private final ElasticsearchClient client;
 
     @Override
-    public void searchAll(String keyword) throws IOException {
+    public List<ArchiveDocument> searchAll(String keyword) throws IOException {
         String template = new ClassPathResource("elastic/queries/archive_search.json")
                 .getContentAsString(StandardCharsets.UTF_8);
 
         String json = String.format(template, keyword, keyword);
 
+
+        return searchResultMapper(json);
+    }
+
+    private List<ArchiveDocument> searchResultMapper(String json) throws IOException {
         SearchResponse<ArchiveDocument> response = client.search(
                 s -> s.index("archive")
                         .withJson(new StringReader(json)),
@@ -47,39 +52,38 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
         );
 
         log.info(response.toString());
-        List<ArchiveDocument> documents = response.hits().hits().stream().map(Hit::source).toList();
 
-        for(ArchiveDocument archiveDocument : documents){
-            log.info(archiveDocument.toString());
-        }
 
+        List<ArchiveDocument> results = new ArrayList<>();
 
         for (Hit<ArchiveDocument> hit : response.hits().hits()) {
             ArchiveDocument doc = hit.source();
             Map<String, List<String>> highlight = hit.highlight();
 
-            String titleHl = null;
-            String descHl = null;
 
-            if (highlight != null) {
-                titleHl = String.join(" ... ", highlight.getOrDefault("title", List.of()));
-                descHl = String.join(" ... ", highlight.getOrDefault("description", List.of()));
+
+            if (highlight != null && doc != null) {
+                if (highlight.containsKey("title")) {
+                    String titleHl = String.join(" ... ", highlight.get("title"));
+
+                    doc.setTitle(titleHl);
+
+                }
+                if (highlight.containsKey("description")) {
+                    String descHl = String.join(" ... ", highlight.get("description"));
+
+                    doc.setDescription(descHl);
+                }
             }
-
-            log.info("title = {}" , doc.getTitle());
-            log.info("title highlight = {}", titleHl);
-            log.info("description highlight = {}", descHl);
-
-
+            results.add(doc);
         }
+
+        return results;
     }
 
+
     @Override
-    public void searchByCondition(SearchByConditionCommand command) throws IOException {
-
-
-
-
+    public List<ArchiveDocument> searchByCondition(SearchByConditionCommand command) throws IOException {
         //기존 searchAll json Template
         Map<String, Object> root = new HashMap<>();
         Map<String, Object> query = new HashMap<>();
@@ -114,12 +118,7 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(root);
 
         log.info("json = {}", json);
-
-
-
-
-
-
+        return searchResultMapper(json);
     }
 
     private List<Object> buildSort(SearchSortType sortType)
@@ -130,7 +129,7 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
         if(sortType == SearchSortType.Latest) {
             Map<String, Object> createdAt = new HashMap<>();
             createdAt.put("order", "desc");
-            sort.add(Map.of("createdAt", createdAt));
+            sort.add(Map.of("createdDateTime", createdAt));
 
         }
 
@@ -155,7 +154,7 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
         multiMatch.put("fields", List.of("title^3", "description", "tags^2"));
         multiMatch.put("type", "best_fields");
         multiMatch.put("fuzziness", "AUTO");
-        multiMatch.put("prefix_length", "1");
+        multiMatch.put("prefix_length", 1);
         multiMatch.put("operator", "or");
         should.add(Map.of("multi_match", multiMatch));
         return should;
@@ -171,7 +170,7 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
             createdAt.put("lte", dateRange.getLte());
 
             Map<String, Object> range = new HashMap<>(); //날짜 별로 검색
-            range.put("createdAt", createdAt);
+            range.put("createdDateTime", createdAt);
 
             filter.add(Map.of("range", range));
         }

@@ -29,6 +29,13 @@
         "copy_to": "auto_complete"
       },
 
+      "topic": {
+        "type": "keyword"
+      },
+      "llmType": {
+        "type": "keyword"
+      },
+
       "urlStatus" :  {"type" :  "keyword"},
       "description" : {
         "type":  "text",
