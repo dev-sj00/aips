@@ -19,11 +19,17 @@ services:
         hard: -1
     volumes:
       - esdata:/usr/share/elasticsearch/data
+      - ./src/main/resources/elastic/nori:/usr/share/elasticsearch/config/nori
     ports:
       - "9200:9200"  # HTTP
       - "9300:9300"  # Transport
     networks:
       - esnet
+    command: >
+      sh -c "
+      bin/elasticsearch-plugin install --batch analysis-nori &&
+      exec /usr/local/bin/docker-entrypoint.sh elasticsearch
+      "
 
 
   kibana:

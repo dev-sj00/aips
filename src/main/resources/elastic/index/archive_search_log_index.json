@@ -1,0 +1,46 @@
+
+{
+  "settings": {
+    "analysis": {
+      "tokenizer": {
+        "my_nori_tokenizer": {
+          "type": "nori_tokenizer",
+          "decompound_mode": "mixed",
+          "user_dictionary": "nori/userdict.txt"
+        }
+      },
+
+      "filter": {
+        "stat_pos_filter": {
+          "type": "nori_part_of_speech",
+          "stoptags": [
+            "EC","EF","EP","ETM","ETN","XSA","XSV",
+            "JKB","JKC","JKG","JKO","JKQ","JKS","JKV","JX","JC",
+            "MAG","MAJ","MM","IC",
+            "VA","VV","VCP","VCN","VX",
+            "SC","SE","SF","SH","SL","SN","SP","SSC","SSO","SY",
+            "NA","UNA","UNKNOWN"
+          ]
+        }
+      },
+      "analyzer": {
+        "stat_analyzer": {
+          "type": "custom",
+          "tokenizer": "my_nori_tokenizer",
+          "filter": ["lowercase", "stat_pos_filter"]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "properties": {
+      "queryRaw": { "type": "keyword" },
+      "queryStat": { "type": "text", "analyzer": "stat_analyzer" },
+      "tokens": { "type": "keyword" },
+      "resultCount": { "type": "integer" },
+      "hasFiltered": { "type": "boolean" },
+      "userNickName": { "type": "keyword" },
+      "createdDateTime": { "type": "date" }
+    }
+  }
+}

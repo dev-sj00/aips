@@ -91,7 +91,7 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
 
         bool.put("should", buildShould(command.keyword()));
         bool.put("minimum_should_match", 1);
-        List<Object> filter = buildFilter(command.topic(), command.dateRange());
+        List<Object> filter = buildFilter(command.topic(), command.llmType(), command.dateRange());
 
         if(!filter.isEmpty()){
             bool.put("filter", filter);
@@ -161,7 +161,7 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
 
     }
 
-    private List<Object> buildFilter(String topic, SearchDateRange dateRange) {
+    private List<Object> buildFilter(String topic, String llmType, SearchDateRange dateRange) {
         List<Object> filter = new ArrayList<>();
 
         if(dateRange != null) {
@@ -176,12 +176,19 @@ public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
         }
 
         if(topic != null) {
-        Map<String, Object> term = new HashMap<>(); //특정 문서만 검색
-        term.put("topic", topic);
+            Map<String, Object> term = new HashMap<>(); //특정 문서만 검색
+            term.put("topic", topic);
 
 
-        filter.add(Map.of("term", term));
+            filter.add(Map.of("term", term));
         }
+
+        if(llmType != null) {
+            Map<String, Object> term = new HashMap<>();
+            term.put("llmType", llmType);
+            filter.add(Map.of("term", term));
+        }
+
         return filter;
     }
 

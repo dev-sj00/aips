@@ -95,7 +95,8 @@ class ArchiveELSearchServiceTest {
                 SearchSortType.Latest, // sort type
                 0,                 // pageFrom
                 15,                // pageSize
-                null//SearchDateRange.SIX_MONTHS // dateRange (enum)
+                null,//SearchDateRange.SIX_MONTHS // dateRange (enum)
+                "chatgpt"
         );
 
         List<ArchiveDocument> result = archiveELSearchService.searchByCondition(command);

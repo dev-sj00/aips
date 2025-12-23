@@ -24,6 +24,7 @@ public class ArchiveIndexInitializer {
         if(isDev) {
             try {
                 ESTemplateUtils.createIndex(client, "archive", "elastic/index/archive_index.json");
+                ESTemplateUtils.createIndex(client, "archive_search_log", "elastic/index/archive_search_log_index.json");
                 log.info("archive index 생성");
             } catch (Exception e) {
                 log.error(e.getMessage());
