@@ -23,6 +23,13 @@ public class CacheConfig {
                             .setStatisticsEnabled(true)
             );
 
+            cm.createCache("userNicknameCache",
+                    new MutableConfiguration<>()
+                            .setExpiryPolicyFactory(
+                                    CreatedExpiryPolicy.factoryOf(Duration.TEN_MINUTES))
+                            .setStoreByValue(false)
+                            .setStatisticsEnabled(true)
+            );
         };
     }
 }

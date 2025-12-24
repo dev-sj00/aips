@@ -8,4 +8,6 @@ import com.portfolio.aips.project.users.entity.UsersEntity;
 public interface UserService {
 
     UsersEntity saveProc(SaveSocialUserInfoRequestDTO saveUserTokenRequest);
+
+    String findUserNickName(Long userPk);
 }

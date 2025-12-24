@@ -1,5 +1,6 @@
 package com.portfolio.aips.project.users.service.user;
 
+import com.portfolio.aips.project.users.entity.QUsersEntity;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.users.entity.RefreshTokenEntity;
 import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
@@ -10,8 +11,10 @@ import com.portfolio.aips.project.users.repo.UsersRepository;
 
 import com.portfolio.aips.project.utils.JwtUtils;
 import com.portfolio.aips.project.utils.dto.CreateAcTokenDTO;
+import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +28,8 @@ import java.util.Date;
 public class UserServiceImpl implements UserService {
 
     private final UsersRepository usersRepository;
-    private final RefreshTokenRepository refreshTokenRepository;
     private final JwtUtils jwtUtils;
+    private final JPAQueryFactory queryFactory;
 
 
     private UsersEntity getNewUserEntity(SaveSocialUserInfoRequestDTO userReq) {
@@ -105,6 +108,23 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    @Cacheable(
+            cacheNames = "userNicknameCache",
+            key = "#userPk",
+            unless = "#result == null"
+    )
+    public String findUserNickName(Long userPk) {
+        QUsersEntity qUsers = QUsersEntity.usersEntity;
+
+        return
+                queryFactory
+                        .select(qUsers.nickname)
+                        .from(qUsers)
+                        .where(qUsers.pk.eq(userPk))
+                        .fetchOne();
+
+    }
 
 
     private void updateRefreshToken(RefreshTokenEntity refreshTokenEntity, Instant expiresAt, Long pk, String nickname) {

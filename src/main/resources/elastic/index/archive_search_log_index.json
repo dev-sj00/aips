@@ -35,7 +35,16 @@
   "mappings": {
     "properties": {
       "queryRaw": { "type": "keyword" },
-      "queryStat": { "type": "text", "analyzer": "stat_analyzer" },
+      "queryStat": {
+        "type": "text",
+        "analyzer": "stat_analyzer",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+
+      },
       "tokens": { "type": "keyword" },
       "resultCount": { "type": "integer" },
       "hasFiltered": { "type": "boolean" },

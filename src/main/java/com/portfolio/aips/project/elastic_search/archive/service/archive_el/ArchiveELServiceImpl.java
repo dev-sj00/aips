@@ -5,6 +5,8 @@ import co.elastic.clients.elasticsearch.core.IndexResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.portfolio.aips.project.elastic_search.archive.dto.ArchiveDocument;
+import com.portfolio.aips.project.elastic_search.archive.dto.ArchiveSearchLogDocument;
+import com.portfolio.aips.project.elastic_search.service.ESIndexService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
@@ -21,24 +23,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Slf4j
 public class ArchiveELServiceImpl implements ArchiveELService{
-    private final ElasticsearchClient  client;
+    private final ESIndexService esIndexService;
 
     @Override
     public void save(ArchiveDocument doc) {
-        try{
-            IndexResponse response = client.index(i -> i
-                    .index("archive")
-                    .id(doc.getPk())
-                    .document(doc)
-            );
+        esIndexService.save("archive", doc.getPk(), doc);
 
-            client.indices().refresh(r -> r.index("archive"));
+    }
 
-            log.info("문서 색인 완료, 결과 : {}", response.result());
-        }catch (Exception e){
-            log.error(e.getMessage());
-        }
+    @Override
+    public void save(ArchiveSearchLogDocument doc)
+    {
+        esIndexService.save("archive_search_log", doc.pk(), doc);
     }
 
 
-    }
+}

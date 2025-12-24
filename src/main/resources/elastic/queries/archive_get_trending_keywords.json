@@ -1,0 +1,30 @@
+{
+  "size": 0,
+  "query": {
+    "bool": {
+      "filter": [
+        {
+          "term": {
+            "hasFiltered": false
+          }
+        },
+        {
+          "range": {
+            "createdDateTime": {
+              "gte": "%s",
+              "lt": "%s"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "aggs": {
+    "trending_keywords": {
+      "terms": {
+        "field": "queryStat.keyword",
+        "size": %d
+      }
+    }
+  }
+}
