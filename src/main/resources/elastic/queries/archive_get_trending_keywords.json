@@ -1,29 +1,27 @@
 {
   "size": 0,
   "query": {
-    "bool": {
-      "filter": [
-        {
-          "term": {
-            "hasFiltered": false
-          }
-        },
-        {
-          "range": {
-            "createdDateTime": {
-              "gte": "%s",
-              "lt": "%s"
-            }
-          }
-        }
-      ]
-    }
+    "term": { "hasFiltered": false }
   },
   "aggs": {
-    "trending_keywords": {
-      "terms": {
-        "field": "queryStat.keyword",
-        "size": %d
+    "periods": {
+      "filters": {
+        "filters": {
+          "current": {
+            "range": { "createdDateTime": { "gte": "%s", "lt": "%s" } }
+          },
+          "prev": {
+            "range": { "createdDateTime": { "gte": "%s", "lt": "%s" } }
+          }
+        }
+      },
+      "aggs": {
+        "trending_keywords": {
+          "terms": {
+            "field": "queryStat.keyword",
+            "size": %d
+          }
+        }
       }
     }
   }

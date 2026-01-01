@@ -27,10 +27,19 @@ services:
       - esnet
     command: >
       sh -c "
-      bin/elasticsearch-plugin install --batch analysis-nori &&
+      if [ ! -d /usr/share/elasticsearch/plugins/analysis-nori ]; then
+        bin/elasticsearch-plugin install --batch analysis-nori
+      fi;
       exec /usr/local/bin/docker-entrypoint.sh elasticsearch
       "
 
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
   kibana:
     image: docker.elastic.co/kibana/kibana:8.11.1
@@ -53,6 +62,7 @@ services:
 volumes:
   esdata:
     driver: local
+  redis_data:
 
 networks:
   esnet:

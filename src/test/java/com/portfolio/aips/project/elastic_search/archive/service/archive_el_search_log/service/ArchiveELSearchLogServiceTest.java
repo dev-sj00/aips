@@ -7,21 +7,20 @@ import co.elastic.clients.elasticsearch.indices.analyze.AnalyzeToken;
 import com.portfolio.aips.project.elastic_search.archive.dto.ArchiveSearchLogDocument;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el.ArchiveELService;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.command.GetTrendingKeywordsCommand;
-import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.enums.SearchDateRange;
-import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.service.ArchiveELTrendingSearchLogService;
-import com.portfolio.aips.project.utils.DateUtils;
+import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.service.ArchiveELTrendingSearchLog.ArchiveELTrendingSearchLogService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -80,14 +79,16 @@ class ArchiveELSearchLogServiceTest {
 
         List<String> keywords = Arrays.asList("치킨집", "치킨집", "치킨집", "라면집", "라면집", "라면집");
 
-        for (String keyword : keywords) {
+
+        for (String keyword : keywords) { //current
             ArchiveSearchLogDocument saveDoc = ArchiveSearchLogDocument
                     .builder()
                     .hasFiltered(false)                        // Filter applied or not
                     .queryRaw(keyword)                         // Original search query
                     .queryStat(keyword)                        // Used for aggregation
                     .userNickName("testUser")                  // Example user nickname
-                    .createdDateTime(ZonedDateTime.now()
+                    .createdDateTime(ZonedDateTime.now(ZoneOffset.UTC)
+                            .truncatedTo(ChronoUnit.DAYS)
                             .minusDays(1) // 1일 빼기
                             .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) // Current timestamp
                     .tokens(Collections.singletonList(keyword))            // Tokenized version
@@ -96,8 +97,25 @@ class ArchiveELSearchLogServiceTest {
             archiveELService.save(saveDoc);                // Save to Elasticsearch
         }
 
-        archiveELTrendingSearchLogService.getTrendingKeywords(
-                new GetTrendingKeywordsCommand(SearchDateRange.WEEK, 10)
+        for (String keyword : keywords) { //prev
+            ArchiveSearchLogDocument saveDoc = ArchiveSearchLogDocument
+                    .builder()
+                    .hasFiltered(false)                        // Filter applied or not
+                    .queryRaw(keyword)                         // Original search query
+                    .queryStat(keyword)                        // Used for aggregation
+                    .userNickName("testUser")                  // Example user nickname
+                    .createdDateTime(ZonedDateTime.now(ZoneOffset.UTC)
+                            .truncatedTo(ChronoUnit.DAYS)
+                            .minusDays(2) // 1일 빼기
+                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) // Current timestamp
+                    .tokens(Collections.singletonList(keyword))            // Tokenized version
+                    .build();
+
+            archiveELService.save(saveDoc);                // Save to Elasticsearch
+        }
+
+        archiveELTrendingSearchLogService.getDailyTrending(
+                new GetTrendingKeywordsCommand( 10)
         );
     }
 }

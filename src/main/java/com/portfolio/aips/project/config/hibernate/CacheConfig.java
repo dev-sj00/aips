@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.cache.configuration.MutableConfiguration;
 import javax.cache.expiry.CreatedExpiryPolicy;
 import javax.cache.expiry.Duration;
+import java.util.concurrent.TimeUnit;
 
 @Configuration
 @EnableCaching
@@ -30,6 +31,15 @@ public class CacheConfig {
                             .setStoreByValue(false)
                             .setStatisticsEnabled(true)
             );
+
+            cm.createCache("trending:1d",
+                    new MutableConfiguration<>()
+                            .setExpiryPolicyFactory(
+                                    CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.HOURS, 3)))
+                            .setStoreByValue(false)
+                            .setStatisticsEnabled(true)
+            );
+
         };
     }
 }
