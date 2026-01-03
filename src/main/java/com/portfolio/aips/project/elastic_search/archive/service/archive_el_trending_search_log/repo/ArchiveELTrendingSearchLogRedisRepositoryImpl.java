@@ -19,6 +19,8 @@ public class ArchiveELTrendingSearchLogRedisRepositoryImpl implements ArchiveELT
 
     private final RedisTemplate<String, Object> redisTemplate;
 
+    private static final int MAX_TREND_KEYWORD_RESULT = 50;
+
     @Override
     public void save(RedisSaveCommand command) {
         String hashKey = getKey(command.range(), command.keyword());
@@ -43,6 +45,8 @@ public class ArchiveELTrendingSearchLogRedisRepositoryImpl implements ArchiveELT
             redisTemplate.expire(hashKey, getTTL(command.range()));
             redisTemplate.expire(zSetKey, getTTL(command.range()));
         }
+
+        // MAX_TREND_KEYWORD_RESULT보다 값이 클 시 점수가 가장 낮은 값 삭제 로직 구현해야함
 
 
 

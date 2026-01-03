@@ -5,8 +5,13 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.command.GetTrendingKeywordsCommand;
+import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.command.RedisSaveCommand;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.enums.SearchDateRange;
+import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.repo.ArchiveELTrendingSearchLogRedisRepository;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.result.GetTrendingKeywordsResult;
+import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.service.TrendingScoreCalculator.TrendingScoreCalculator;
+import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.service.TrendingScoreCalculator.command.CalculateScoreCommand;
+import com.portfolio.aips.project.utils.DateUtils;
 import com.portfolio.aips.project.utils.ESTemplateUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +23,8 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,7 +36,8 @@ public class ArchiveELTrendingSearchLogServiceImpl implements ArchiveELTrendingS
 
     private final ElasticsearchClient client;
 
-    private static final int MAX_TREND_KEYWORD_RESULT = 50;
+    private final TrendingScoreCalculator trendingScoreCalculator;
+    private final ArchiveELTrendingSearchLogRedisRepository archiveELTrendingSearchLogRedisRepository;
 
     private List<GetTrendingKeywordsResult> getTrendingKeywordsProc(SearchDateRange searchDateRange, GetTrendingKeywordsCommand command) throws URISyntaxException, IOException
     {
@@ -54,23 +62,63 @@ public class ArchiveELTrendingSearchLogServiceImpl implements ArchiveELTrendingS
         JsonNode root = mapper.readTree(responseBody);
 
 
-        JsonNode buckets = root.path("aggregations")
+        HashMap<String, CalculateScoreCommand> calculateScoreCommandMap = getCalculateCommandMap(root);
+
+
+        List<RedisSaveCommand> results= new ArrayList<>();
+        calculateScoreCommandMap.forEach((key, value) -> {
+            double score = trendingScoreCalculator.calculateScore(value);
+
+            results.add(new RedisSaveCommand(key, String.valueOf(value.currentDocCount()), DateUtils.getDateTimeNow(), searchDateRange, score));
+
+        });
+
+
+        //redis proc
+        for(RedisSaveCommand redisSaveCommand : results) {
+            archiveELTrendingSearchLogRedisRepository.save(redisSaveCommand);
+        }
+
+        return archiveELTrendingSearchLogRedisRepository.findAll(searchDateRange);
+    }
+
+    private HashMap<String, CalculateScoreCommand> getCalculateCommandMap(JsonNode root) {
+        JsonNode currentBuckets = root.path("aggregations")
+                .path("periods")
+                .path("buckets")
+                .path("current")
+                .path("trending_keywords")
+                .path("buckets");
+
+        JsonNode prevBuckets = root.path("aggregations")
+                .path("periods")
+                .path("buckets")
+                .path("prev")
                 .path("trending_keywords")
                 .path("buckets");
 
 
         //구현 중
-        for (JsonNode bucket : buckets) {
-            String key = bucket.path("key").asText();
-            long docCount = bucket.path("doc_count").asLong();
-            log.info("{}: {}", key, docCount);
-        }
-
-        //redis proc
 
 
+        HashMap<String, CalculateScoreCommand> resultMap = new HashMap<>();
 
-        return List.of();
+
+        currentBuckets.forEach(b ->
+                resultMap.put(b.path("key").asText(),
+                        new CalculateScoreCommand(0, b.path("doc_count").asLong()))
+        );
+
+
+        prevBuckets.forEach(b-> {
+            String key = b.path("key").asText();
+            long docCount = b.path("doc_count").asLong();
+
+            resultMap.computeIfPresent(key,
+                    (k, v) -> new CalculateScoreCommand(docCount, v.currentDocCount()));
+        });
+
+        return resultMap;
     }
 
     private String getJsonQueryWithFormat(String jsonTemplate, SearchDateRange range, GetTrendingKeywordsCommand command) throws URISyntaxException, IOException {
