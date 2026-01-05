@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch.indices.analyze.AnalyzeToken;
 import com.portfolio.aips.project.elastic_search.archive.dto.ArchiveSearchLogDocument;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el.ArchiveELService;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.command.GetTrendingKeywordsCommand;
+import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.result.GetTrendingKeywordsResult;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.service.ArchiveELTrendingSearchLog.ArchiveELTrendingSearchLogService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -76,7 +78,6 @@ class ArchiveELSearchLogServiceTest {
     @Test
     public void get_trending_keyword_test() throws URISyntaxException, IOException {
 
-
         List<String> keywords = Arrays.asList("치킨집", "치킨집", "치킨집", "라면집", "라면집", "라면집");
 
 
@@ -114,8 +115,76 @@ class ArchiveELSearchLogServiceTest {
             archiveELService.save(saveDoc);                // Save to Elasticsearch
         }
 
-        archiveELTrendingSearchLogService.getDailyTrending(
+
+        List<GetTrendingKeywordsResult> result = archiveELTrendingSearchLogService.getDailyTrending(
                 new GetTrendingKeywordsCommand( 10)
         );
+
+        for(GetTrendingKeywordsResult getTrendingKeywordsResult : result){
+            System.out.println(getTrendingKeywordsResult);
+        }
+    }
+
+    @Test
+    //치킨집 → current 3 / prev 2 rank 1
+    //라면집 → current 3 / prev 2 rank 0
+    public void get_trending_keywords_test2() throws URISyntaxException, IOException {
+        List<String> keywords = Arrays.asList("치킨집", "치킨집", "치킨집", "라면집", "라면집", "라면집");
+
+// --- Current Data (어제, 동일)
+        for (String keyword : keywords) {
+            ArchiveSearchLogDocument saveDoc = ArchiveSearchLogDocument
+                    .builder()
+                    .hasFiltered(false)
+                    .queryRaw(keyword)
+                    .queryStat(keyword)
+                    .userNickName("testUser")
+                    .createdDateTime(ZonedDateTime.now(ZoneOffset.UTC)
+                            .truncatedTo(ChronoUnit.DAYS)
+                            .minusDays(1) // current = 어제
+                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                    .tokens(Collections.singletonList(keyword))
+                    .build();
+
+            archiveELService.save(saveDoc);
+        }
+
+// --- Previous Data (그제, current 대비 다르게)
+        Map<String, Integer> prevCounts = Map.of(
+                "치킨집", 2,  // current 3번 대비 prev 1번
+                "라면집", 1   // current 3번 대비 prev 2번
+        );
+
+        for (Map.Entry<String, Integer> entry : prevCounts.entrySet()) {
+            String keyword = entry.getKey();
+            int count = entry.getValue();
+
+            for (int i = 0; i < count; i++) {
+                ArchiveSearchLogDocument saveDoc = ArchiveSearchLogDocument
+                        .builder()
+                        .hasFiltered(false)
+                        .queryRaw(keyword)
+                        .queryStat(keyword)
+                        .userNickName("testUser")
+                        .createdDateTime(ZonedDateTime.now(ZoneOffset.UTC)
+                                .truncatedTo(ChronoUnit.DAYS)
+                                .minusDays(2) // prev = 그제
+                                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                        .tokens(Collections.singletonList(keyword))
+                        .build();
+
+                archiveELService.save(saveDoc);
+            }
+        }
+
+        List<GetTrendingKeywordsResult> result = archiveELTrendingSearchLogService.getDailyTrending(
+                new GetTrendingKeywordsCommand( 10)
+        );
+
+        for(GetTrendingKeywordsResult getTrendingKeywordsResult : result){
+            System.out.println(getTrendingKeywordsResult);
+        }
+
+
     }
 }

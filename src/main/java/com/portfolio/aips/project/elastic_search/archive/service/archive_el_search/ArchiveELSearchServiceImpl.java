@@ -4,23 +4,20 @@ package com.portfolio.aips.project.elastic_search.archive.service.archive_el_sea
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
+
 import com.google.gson.GsonBuilder;
 import com.portfolio.aips.project.elastic_search.archive.dto.ArchiveDocument;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_search.command.SearchByConditionCommand;
-import com.portfolio.aips.project.elastic_search.archive.service.archive_el_search.command.SearchByConditionCreateAtCommand;
+
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_search.enums.SearchDateRange;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_search.enums.SearchSortType;
-import jakarta.json.JsonObject;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,13 +29,13 @@ import java.util.Map;
 public class ArchiveELSearchServiceImpl implements ArchiveELSearchService{
 
     private final ElasticsearchClient client;
+    private final String archiveSearchQueryTemplate;
 
     @Override
     public List<ArchiveDocument> searchAll(String keyword) throws IOException {
-        String template = new ClassPathResource("elastic/queries/archive_search.json")
-                .getContentAsString(StandardCharsets.UTF_8);
 
-        String json = String.format(template, keyword, keyword);
+
+        String json = String.format(archiveSearchQueryTemplate, keyword, keyword);
 
 
         return searchResultMapper(json);

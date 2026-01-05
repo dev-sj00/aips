@@ -18,6 +18,8 @@ public class ESTemplateUtils {
 
     private static final Logger log = LoggerFactory.getLogger(ESTemplateUtils.class);
 
+    
+    @Deprecated //계속된 io로 인해 Bean 방식으로 교체
     public static String loadJson(String resourcePath) throws URISyntaxException, IOException {
         return Files.readString(
                 Paths.get(Objects.requireNonNull(ESTemplateUtils.class.getClassLoader()

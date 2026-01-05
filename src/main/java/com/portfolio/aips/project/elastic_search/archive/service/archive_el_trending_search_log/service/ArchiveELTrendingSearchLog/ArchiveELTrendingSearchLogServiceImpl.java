@@ -38,13 +38,14 @@ public class ArchiveELTrendingSearchLogServiceImpl implements ArchiveELTrendingS
 
     private final TrendingScoreCalculator trendingScoreCalculator;
     private final ArchiveELTrendingSearchLogRedisRepository archiveELTrendingSearchLogRedisRepository;
+    private final String archiveGetTrendingKeywordsTemplate;
 
     private List<GetTrendingKeywordsResult> getTrendingKeywordsProc(SearchDateRange searchDateRange, GetTrendingKeywordsCommand command) throws URISyntaxException, IOException
     {
 
 
-        String jsonTemplate = ESTemplateUtils.loadJson("elastic/queries/archive_get_trending_keywords.json");
-        String jsonQuery =  getJsonQueryWithFormat(jsonTemplate, searchDateRange, command);
+
+        String jsonQuery =  getJsonQueryWithFormat(archiveGetTrendingKeywordsTemplate, searchDateRange, command);
 
 
         log.info("jsonQuery: {}", jsonQuery);
@@ -80,6 +81,8 @@ public class ArchiveELTrendingSearchLogServiceImpl implements ArchiveELTrendingS
         }
 
         return archiveELTrendingSearchLogRedisRepository.findAll(searchDateRange);
+
+
     }
 
     private HashMap<String, CalculateScoreCommand> getCalculateCommandMap(JsonNode root) {

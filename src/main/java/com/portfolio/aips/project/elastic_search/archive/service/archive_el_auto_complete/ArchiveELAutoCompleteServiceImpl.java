@@ -21,12 +21,13 @@ public class ArchiveELAutoCompleteServiceImpl implements ArchiveELAutoCompleteSe
 
     private final ElasticsearchClient client;
     private final ObjectMapper objectMapper;
+    private final String archiveAutocompleteQueryTemplate;
 
     @Override
     public List<String> autocomplete(String keyword)  {
         try {
-            String jsonTemplate = ESTemplateUtils.loadJson("elastic/queries/archive_autocomplete.json");
-            String jsonQuery = String.format(jsonTemplate, keyword);
+
+            String jsonQuery = String.format(archiveAutocompleteQueryTemplate, keyword);
 
             Response response = ESTemplateUtils.responseBuilder(client)
                     .body(jsonQuery)
