@@ -9,9 +9,12 @@ import com.portfolio.aips.project.elastic_search.archive.service.archive_el.Arch
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.command.GetTrendingKeywordsCommand;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.result.GetTrendingKeywordsResult;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.service.ArchiveELTrendingSearchLog.ArchiveELTrendingSearchLogService;
+import com.portfolio.aips.project.search.archive.trending_search.service.TrendingSearchScheduleService;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -40,6 +43,12 @@ class ArchiveELSearchLogServiceTest {
 
     @Autowired
     private ArchiveELService archiveELService;
+
+    @Autowired
+    private TrendingSearchScheduleService trendingSearchScheduleService;
+
+    @Autowired
+    private EntityManager em;
 
     @Test
     public void analyzeTextTest() throws IOException {
@@ -72,6 +81,54 @@ class ArchiveELSearchLogServiceTest {
     @Test
     public void save_test() throws IOException {
         archiveELSearchLogService.save("키보드 마우스 모니터 추천", 1L);
+
+    }
+
+
+    @Test
+    @Transactional
+    public void trendingSearchLogTest() throws IOException, URISyntaxException {
+        List<String> keywords = Arrays.asList("치킨집", "치킨집", "치킨집", "라면집", "라면집", "라면집");
+
+
+        for (String keyword : keywords) { //current
+            ArchiveSearchLogDocument saveDoc = ArchiveSearchLogDocument
+                    .builder()
+                    .hasFiltered(false)                        // Filter applied or not
+                    .queryRaw(keyword)                         // Original search query
+                    .queryStat(keyword)                        // Used for aggregation
+                    .userNickName("testUser")                  // Example user nickname
+                    .createdDateTime(ZonedDateTime.now(ZoneOffset.UTC)
+                            .truncatedTo(ChronoUnit.DAYS)
+                            .minusDays(1) // 1일 빼기
+                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) // Current timestamp
+                    .tokens(Collections.singletonList(keyword))            // Tokenized version
+                    .build();
+
+            archiveELService.save(saveDoc);                // Save to Elasticsearch
+        }
+
+        for (String keyword : keywords) { //prev
+            ArchiveSearchLogDocument saveDoc = ArchiveSearchLogDocument
+                    .builder()
+                    .hasFiltered(false)                        // Filter applied or not
+                    .queryRaw(keyword)                         // Original search query
+                    .queryStat(keyword)                        // Used for aggregation
+                    .userNickName("testUser")                  // Example user nickname
+                    .createdDateTime(ZonedDateTime.now(ZoneOffset.UTC)
+                            .truncatedTo(ChronoUnit.DAYS)
+                            .minusDays(9) // 1일 빼기
+                            .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)) // Current timestamp
+                    .tokens(Collections.singletonList(keyword))            // Tokenized version
+                    .build();
+
+            archiveELService.save(saveDoc);                // Save to Elasticsearch
+        }
+
+
+        trendingSearchScheduleService.save();
+
+        em.flush();
     }
 
 

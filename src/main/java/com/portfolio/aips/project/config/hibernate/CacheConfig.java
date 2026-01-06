@@ -32,13 +32,6 @@ public class CacheConfig {
                             .setStatisticsEnabled(true)
             );
 
-            cm.createCache("trending:1d",
-                    new MutableConfiguration<>()
-                            .setExpiryPolicyFactory(
-                                    CreatedExpiryPolicy.factoryOf(new Duration(TimeUnit.HOURS, 3)))
-                            .setStoreByValue(false)
-                            .setStatisticsEnabled(true)
-            );
 
         };
     }

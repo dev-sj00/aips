@@ -12,6 +12,9 @@ public class VolumeGrowthScoreCalculatorImpl implements TrendingScoreCalculator 
     @Override
     public double calculateScore(CalculateScoreCommand command) {
 
-        return  Math.log(command.currentDocCount()) + ((double) command.currentDocCount() / command.prevDocCount());
+        return    Math.log(command.currentDocCount())
+                + (command.prevDocCount() == 0
+                ? 0.0
+                : (double) command.currentDocCount() / command.prevDocCount());
     }
 }

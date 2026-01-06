@@ -52,24 +52,13 @@ public class HibernateConfig {
         properties.put("hibernate.order_updates", "true");       // update 순서 정렬 (필요시)
         properties.put("hibernate.generate_statistics", "true"); // 통계 확인용 (옵션)
 
-
-
-
         //  2차 캐시 활성화
 
         properties.put("hibernate.cache.region.factory_class", "org.hibernate.cache.jcache.JCacheRegionFactory");
         properties.put("hibernate.javax.cache.provider", "org.ehcache.jsr107.EhcacheCachingProvider");
 
-
-
         properties.put("hibernate.cache.use_second_level_cache", true);
         properties.put("hibernate.cache.use_query_cache", true);
-
-
-
-
-
-
 
         emf.setJpaProperties(properties);
 

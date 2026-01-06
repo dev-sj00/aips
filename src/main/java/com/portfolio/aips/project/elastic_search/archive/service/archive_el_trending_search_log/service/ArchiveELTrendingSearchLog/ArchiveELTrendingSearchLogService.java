@@ -10,7 +10,7 @@ import java.util.List;
 
 //향후 변경될 가능성 있음
 public interface ArchiveELTrendingSearchLogService {
-        List<GetTrendingKeywordsResult> getDailyTrending(GetTrendingKeywordsCommand command) throws URISyntaxException, IOException;
+    List<GetTrendingKeywordsResult> getDailyTrending(GetTrendingKeywordsCommand command) throws URISyntaxException, IOException;
     List<GetTrendingKeywordsResult> get3DayTrending(GetTrendingKeywordsCommand command) throws URISyntaxException, IOException;
     List<GetTrendingKeywordsResult> get7DayTrending(GetTrendingKeywordsCommand command) throws URISyntaxException, IOException;
 }
