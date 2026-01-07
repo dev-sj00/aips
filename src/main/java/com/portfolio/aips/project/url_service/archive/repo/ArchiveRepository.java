@@ -7,5 +7,6 @@ import java.util.Optional;
 
 public interface ArchiveRepository extends JpaRepository<ArchiveEntity, Long> {
         boolean existsBySiteSlug(String siteSlug);
+        boolean existsByPk(Long pk);
 
 }
