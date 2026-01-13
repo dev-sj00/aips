@@ -10,7 +10,7 @@ description = 'elasticsearch and jpa portfolio'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(25)
 	}
 }
 
@@ -35,8 +35,8 @@ sourceSets {
     }
 }
 
-tasks.withType(JavaCompile) {
-    options.annotationProcessorGeneratedSourcesDirectory = file(querydslDir)
+tasks.withType(JavaCompile).configureEach {
+    options.getGeneratedSourceOutputDirectory().set(file(querydslDir))
 }
 
 dependencies {
@@ -78,6 +78,7 @@ dependencies {
     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
 
     implementation 'com.google.code.gson:gson:2.10.1'
+    implementation "net.javacrumbs.shedlock:shedlock-spring:6.10.0"
 
 
 }

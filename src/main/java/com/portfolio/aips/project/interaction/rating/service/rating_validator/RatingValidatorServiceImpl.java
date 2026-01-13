@@ -2,7 +2,7 @@ package com.portfolio.aips.project.interaction.rating.service.rating_validator;
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.interaction.rating.enums.BoardType;
+import com.portfolio.aips.project.interaction.enums.BoardType;
 import com.portfolio.aips.project.interaction.rating.service.rating_validator.command.SaveVerifyCommand;
 import com.portfolio.aips.project.url_service.archive.repo.ArchiveRepository;
 import lombok.RequiredArgsConstructor;

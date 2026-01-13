@@ -3,7 +3,9 @@ package com.portfolio.aips.project.interaction.rating.service.rating.service;
 import com.portfolio.aips.project.interaction.rating.entity.QRatingEntity;
 import com.portfolio.aips.project.interaction.rating.entity.RatingEntity;
 import com.portfolio.aips.project.interaction.rating.repo.RatingRepository;
+import com.portfolio.aips.project.interaction.rating.service.rating.command.FindOwnRatings;
 import com.portfolio.aips.project.interaction.rating.service.rating.command.SaveCommand;
+import com.portfolio.aips.project.interaction.rating.service.rating.result.FindOwnRatingsResult;
 import com.portfolio.aips.project.interaction.rating.service.rating_validator.RatingValidatorService;
 import com.portfolio.aips.project.interaction.rating.service.rating_validator.command.SaveVerifyCommand;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -58,5 +60,11 @@ public class RatingServiceImpl  implements RatingService {
 
 
 
+    }
+
+    @Override
+    public FindOwnRatingsResult findOwnRatings(FindOwnRatings command) {
+        RatingEntity ratingEntity = ratingRepository.findByBoardPkAndBoardTypeAndRaterUserPk(command.boardPk(), command.boardType(), command.ownUserPk());
+        return new FindOwnRatingsResult(ratingEntity.getUsefulnessScore(), ratingEntity.getReliabilityScore(), ratingEntity.getFunScore());
     }
 }

@@ -1,14 +1,10 @@
 package com.portfolio.aips.project.interaction.rating.service.rating.service;
 
-import com.portfolio.aips.project.interaction.rating.entity.RatingEntity;
-import com.portfolio.aips.project.interaction.rating.enums.BoardType;
-import com.portfolio.aips.project.interaction.rating.repo.RatingRepository;
+import com.portfolio.aips.project.interaction.enums.BoardType;
 import com.portfolio.aips.project.interaction.rating.service.rating.command.SaveCommand;
 import com.portfolio.aips.project.url_service.archive.entity.ArchiveEntity;
 import com.portfolio.aips.project.url_service.archive.repo.ArchiveRepository;
-import com.portfolio.aips.project.url_service.archive.service.archive.ArchiveService;
 import com.portfolio.aips.project.url_service.common.entity.URLStatusEntity;
-import com.portfolio.aips.project.url_service.common.enums.URLStatus;
 import com.portfolio.aips.project.url_service.common.service.url_generator.enums.URLGeneratorType;
 import com.portfolio.aips.project.utils.enums.LLMType;
 import jakarta.persistence.EntityManager;
@@ -16,8 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class RatingServiceTest {
