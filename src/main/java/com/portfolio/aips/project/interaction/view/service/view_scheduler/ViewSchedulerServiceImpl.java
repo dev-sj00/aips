@@ -2,14 +2,12 @@ package com.portfolio.aips.project.interaction.view.service.view_scheduler;
 
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.ViewELBulkService;
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.command.UpdateViewCountProcCommand;
-import com.portfolio.aips.project.interaction.enums.BoardType;
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
 import com.portfolio.aips.project.interaction.view.repo.ViewBatchRepository;
 import com.portfolio.aips.project.interaction.view.repo.ViewRedisRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
-import org.springframework.data.redis.connection.RedisStringCommands;
 import org.springframework.data.redis.core.*;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;

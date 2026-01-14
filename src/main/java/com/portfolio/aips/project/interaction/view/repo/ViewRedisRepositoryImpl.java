@@ -2,15 +2,20 @@ package com.portfolio.aips.project.interaction.view.repo;
 
 import com.portfolio.aips.project.interaction.enums.BoardType;
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
-import com.portfolio.aips.project.interaction.view.service.view.command.IncreaseViewCountCommand;
-import com.portfolio.aips.project.interaction.view.dto.RedisDecreaseViewCountDTO;
+import com.portfolio.aips.project.interaction.view.repo.dto.request.IncreaseViewCountDTO;
+import com.portfolio.aips.project.interaction.view.repo.dto.request.RedisDecreaseViewCountDTO;
+import com.portfolio.aips.project.interaction.view.repo.dto.request.SaveHeartBeatDTO;
+import com.portfolio.aips.project.interaction.view.repo.dto.result.FindByHbKeyResult;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.KeyScanOptions;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -18,24 +23,81 @@ import java.util.concurrent.TimeUnit;
 
 @Repository
 @RequiredArgsConstructor
+@Slf4j
 public class ViewRedisRepositoryImpl implements ViewRedisRepository{
 
     private final RedisTemplate<String, Object> redisTemplate;
-    @Override
-    public void increaseViewCount(IncreaseViewCountCommand command) {
-        String viewCountKey = getViewCountKey(command.boardType(), command.boardPk());
-        String viewDeDupKey = getViewDeDupKey(command);
 
+    private static final Duration HEARTBEAT_TTL = Duration.ofMinutes(3);
+
+    @Override
+    public void increaseViewCount(IncreaseViewCountDTO dto) {
+        String viewCountKey = getViewCountKey(dto.boardType(), dto.boardPk());
+        String viewDeDupKey = getViewDeDupKey(dto);
+
+
+        log.info("{}, {}, {}, {}", dto.ViewerIpAddr(), dto.boardPk(), viewCountKey, viewDeDupKey);
         Boolean isFirstView = redisTemplate.opsForValue()
-                .setIfAbsent(viewDeDupKey, "1", 1, TimeUnit.HOURS);
+                .setIfAbsent(viewDeDupKey, "1", 6, TimeUnit.HOURS);
 
         if(Boolean.TRUE.equals(isFirstView)){
             redisTemplate.opsForValue().increment(viewCountKey);
+        }else {
+            log.info("중복임");
+
+        }
+
+    }
+
+    @Override
+    public String saveHeartBeat(SaveHeartBeatDTO dto) {
+        String hbKey = getHeartBeatKey(dto);
+
+        long now = System.currentTimeMillis();
+
+        redisTemplate.opsForList().rightPush(hbKey, String.valueOf(now));
+        redisTemplate.expire(hbKey, HEARTBEAT_TTL);
+
+
+
+
+
+
+       /* if (last - first >= HEARTBEAT_TIME_PERIOD) {
+            return true;
+        }*/
+
+        return hbKey;
+
+    }
+
+    public FindByHbKeyResult findByHbKey(String hbKey) {
+        Long size = redisTemplate.opsForList().size(hbKey);
+
+        log.info("size: {}", size);
+        if(size == null || size < 2)
+        {
+
+            return new FindByHbKeyResult(null,null);
         }
 
 
+        List<Object> times = redisTemplate.opsForList().range(hbKey, 0, -1);
+
+        if(times == null || times.size() < 2)
+        {
+
+            return new FindByHbKeyResult(size, null);
+        }
 
 
+        return new FindByHbKeyResult(size, times);
+
+    }
+
+    public void deleteKey(String key)
+    {
+        redisTemplate.delete(key);
     }
 
     @Override
@@ -90,7 +152,12 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
         return "view:count:b_type:"+ boardType+":b_pk:"+boardPk;
     }
 
-    private String getViewDeDupKey(IncreaseViewCountCommand command) {
+    private String getHeartBeatKey(SaveHeartBeatDTO command) {
+
+        return "view:hb:ip:"+command.ipAddr()+":"+command.userAgent();
+    }
+
+    private String getViewDeDupKey(IncreaseViewCountDTO command) {
         if (command.ViewerUserPk() != null) {
             // 로그인 유저
             return "View:dedup:b_type:" + command.boardType()

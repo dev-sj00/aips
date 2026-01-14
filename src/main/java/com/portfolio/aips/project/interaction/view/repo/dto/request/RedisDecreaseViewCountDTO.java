@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.interaction.view.dto;
+package com.portfolio.aips.project.interaction.view.repo.dto.request;
 
 import com.portfolio.aips.project.interaction.enums.BoardType;
 
