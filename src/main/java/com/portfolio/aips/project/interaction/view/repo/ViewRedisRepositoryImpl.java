@@ -110,10 +110,11 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
     public List<ViewEntity> findAllWithScan() {
         List<ViewEntity> entities = new ArrayList<>();
 
+
         KeyScanOptions options = (KeyScanOptions) KeyScanOptions.scanOptions()
                 .match("view:count:b_type:*:b_pk:*")
                 .count(1000)
-                .type("set")
+                .type("string")
                 .build();
 
 
@@ -123,8 +124,8 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
                     byte[] keyBytes = cursor.next();
                     String key = new String(keyBytes);
 
-                    String boardType = key.split(":")[2];
-                    long boardPk = Long.parseLong(key.split(":")[3]);
+                    String boardType = key.split(":")[3];
+                    long boardPk = Long.parseLong(key.split(":")[5]);
 
                     String viewCounts =
                             new String(Objects.requireNonNull(connection.stringCommands().get(keyBytes)));

@@ -21,4 +21,5 @@ public class ArchiveDocument {
     private List<String> tags;
     private String llmType;
     private String topic;
+    private Long viewCount;
 }

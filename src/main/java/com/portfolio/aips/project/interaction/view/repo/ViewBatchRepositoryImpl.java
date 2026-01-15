@@ -29,9 +29,8 @@ public class ViewBatchRepositoryImpl implements ViewBatchRepository {
 
 
     @Override
-    public void updateViewBatchProc(List<ViewEntity> viewEntities,  int batchSize) {
-        String sql = "INSERT INTO views (board_pk, board_type, view_count) VALUES (?, ?, ?) " +
-                "ON CONFLICT (board_pk, board_type) DO UPDATE SET view_count = EXCLUDED.view_count";
+    public void     updateViewBatchProc(List<ViewEntity> viewEntities,  int batchSize) {
+        String sql = "UPDATE view SET view_count = ? WHERE board_pk = ? AND board_type = ?";
 
 
         int total = viewEntities.size();
@@ -41,6 +40,7 @@ public class ViewBatchRepositoryImpl implements ViewBatchRepository {
 
             List<ViewEntity> subList =
                     new ArrayList<>(viewEntities.subList(start, end));
+
 
             vtExecutor.submit(() -> {
                 try {
@@ -67,14 +67,16 @@ public class ViewBatchRepositoryImpl implements ViewBatchRepository {
     }
 
     private void executeBatch(String sql, List<ViewEntity> batch) {
+        log.info("executing batch: {}", sql);
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
 
             @Override
             public void setValues(PreparedStatement ps, int i) throws SQLException {
                 ViewEntity viewEntity = batch.get(i);
-                ps.setLong(1, viewEntity.getBoardPk());
-                ps.setString(2, viewEntity.getBoardType().toString());
-                ps.setLong(3, viewEntity.getViewCount());
+                ps.setLong(1, viewEntity.getViewCount());
+                ps.setLong(2, viewEntity.getBoardPk());
+                ps.setString(3, viewEntity.getBoardType().name());
+                log.info("viewCount: {} {} {}", viewEntity.getViewCount(), viewEntity.getBoardPk(), viewEntity.getBoardType());
             }
 
             @Override

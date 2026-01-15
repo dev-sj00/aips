@@ -1,7 +1,9 @@
 package com.portfolio.aips.project.interaction.rating.service.rating.service;
 
+import com.portfolio.aips.project.interaction.rating.dto.RedisSaveRatingsKeyDTO;
 import com.portfolio.aips.project.interaction.rating.entity.QRatingEntity;
 import com.portfolio.aips.project.interaction.rating.entity.RatingEntity;
+import com.portfolio.aips.project.interaction.rating.repo.RatingRedisRepository;
 import com.portfolio.aips.project.interaction.rating.repo.RatingRepository;
 import com.portfolio.aips.project.interaction.rating.service.rating.command.FindOwnRatings;
 import com.portfolio.aips.project.interaction.rating.service.rating.command.SaveCommand;
@@ -22,6 +24,7 @@ public class RatingServiceImpl  implements RatingService {
     private final RatingRepository ratingRepository;
     private final JPAQueryFactory queryFactory;
     private final RatingValidatorService validatorService;
+    private final RatingRedisRepository ratingRedisRepository;
 
     @Override
     @Transactional
@@ -58,6 +61,8 @@ public class RatingServiceImpl  implements RatingService {
 
         ratingRepository.save(newEntity);
 
+        //스케줄러 처리용
+        ratingRedisRepository.saveRatings(new RedisSaveRatingsKeyDTO(command.boardPk(), command.boardType()));
 
 
     }

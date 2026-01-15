@@ -1,9 +1,12 @@
 package com.portfolio.aips.project.interaction.view.service.view;
 
+import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
 import com.portfolio.aips.project.interaction.view.repo.ViewRedisRepository;
+import com.portfolio.aips.project.interaction.view.repo.ViewRepository;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.IncreaseViewCountDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.SaveHeartBeatDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.result.FindByHbKeyResult;
+import com.portfolio.aips.project.interaction.view.service.view.command.CreateViewCommand;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,8 +18,8 @@ import java.util.List;
 @Slf4j
 public class ViewServiceImpl implements ViewService {
     private final ViewRedisRepository viewRedisRepository;
-    private static final long HEARTBEAT_TIME_PERIOD = 20_000; //두번 하트비트 요청 시 간격 20초 이상
-
+    private static final long HEARTBEAT_TIME_PERIOD = 20_000; //두번 하트비트 요청 시(40초) 간격 20초 이상
+    private final ViewRepository viewRepository;
 
     @Override
     public void increaseViewCount(IncreaseViewCountDTO dto) {
@@ -63,6 +66,12 @@ public class ViewServiceImpl implements ViewService {
 
 
         return false;
+    }
+
+    @Override
+    public void createView(CreateViewCommand command) {
+
+        viewRepository.save(new ViewEntity(null, command.boardPk(),  command.boardType(), command.viewCount()));
     }
 
 
