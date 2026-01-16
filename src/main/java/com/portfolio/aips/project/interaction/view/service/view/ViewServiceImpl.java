@@ -29,7 +29,7 @@ public class ViewServiceImpl implements ViewService {
             viewRedisRepository.increaseViewCount(dto);
         }else{
             ViewEntity viewEntity = viewRepository.findByBoardPkAndBoardType(dto.boardPk(), dto.boardType());
-            viewRedisRepository.increaseViewCount(dto, viewEntity.getViewCount());
+            viewRedisRepository.increaseViewCount(dto, viewEntity.getViewCount() + 1);
         }
 
 
