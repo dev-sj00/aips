@@ -3,6 +3,7 @@ package com.portfolio.aips.project.interaction.view.service.view;
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
 import com.portfolio.aips.project.interaction.view.repo.ViewRedisRepository;
 import com.portfolio.aips.project.interaction.view.repo.ViewRepository;
+import com.portfolio.aips.project.interaction.view.repo.dto.request.ExistsViewCountDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.IncreaseViewCountDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.SaveHeartBeatDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.result.FindByHbKeyResult;
@@ -24,7 +25,14 @@ public class ViewServiceImpl implements ViewService {
     @Override
     public void increaseViewCount(IncreaseViewCountDTO dto) {
 
-        viewRedisRepository.increaseViewCount(dto);
+        if(viewRedisRepository.existsViewCount(new ExistsViewCountDTO(dto.boardType(), dto.boardPk()))) {
+            viewRedisRepository.increaseViewCount(dto);
+        }else{
+            ViewEntity viewEntity = viewRepository.findByBoardPkAndBoardType(dto.boardPk(), dto.boardType());
+            viewRedisRepository.increaseViewCount(dto, viewEntity.getViewCount());
+        }
+
+
 
 
     }

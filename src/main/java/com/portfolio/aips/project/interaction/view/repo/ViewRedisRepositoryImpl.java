@@ -2,6 +2,7 @@ package com.portfolio.aips.project.interaction.view.repo;
 
 import com.portfolio.aips.project.interaction.enums.BoardType;
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
+import com.portfolio.aips.project.interaction.view.repo.dto.request.ExistsViewCountDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.IncreaseViewCountDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.RedisDecreaseViewCountDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.SaveHeartBeatDTO;
@@ -46,6 +47,33 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
             log.info("중복임");
 
         }
+
+    }
+
+    @Override
+    public void increaseViewCount(IncreaseViewCountDTO dto, long viewCount) {
+        String viewCountKey = getViewCountKey(dto.boardType(), dto.boardPk());
+        String viewDeDupKey = getViewDeDupKey(dto);
+
+
+        log.info("{}, {}, {}, {}", dto.ViewerIpAddr(), dto.boardPk(), viewCountKey, viewDeDupKey);
+        Boolean isFirstView = redisTemplate.opsForValue()
+                .setIfAbsent(viewDeDupKey, "1", 6, TimeUnit.HOURS);
+
+
+        if(Boolean.TRUE.equals(isFirstView)){
+            redisTemplate.opsForValue().increment(viewCountKey, viewCount);
+        }else {
+            log.info("중복임");
+
+        }
+
+    }
+
+    public boolean existsViewCount(ExistsViewCountDTO dto) {
+        String viewCountKey = getViewCountKey(dto.boardType(), dto.boardPk());
+
+        return  redisTemplate.hasKey(viewCountKey);
 
     }
 

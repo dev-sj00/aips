@@ -31,13 +31,14 @@ public class ViewSchedulerServiceImpl implements ViewSchedulerService {
             lockAtMostFor = "PT10M"
     )
 
-    public void updateViewCount() throws IOException {
+    public void updateViewCount() throws IOException, InterruptedException {
 
 
 
         List<ViewEntity> entities = viewRedisRepository.findAllWithScan(); //영속성 없음
 
         log.info("entities size: {}", entities.size());
+
         viewBatchRepository.updateViewBatchProc(entities, 50);
 
         //증분 색인
