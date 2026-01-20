@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.KeyScanOptions;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
@@ -30,6 +31,13 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
     private final RedisTemplate<String, Object> redisTemplate;
 
     private static final Duration HEARTBEAT_TTL = Duration.ofMinutes(3);
+    private static final RedisScript<Long> INCR_WITH_TTL =
+            RedisScript.of("""
+            local v = redis.call("INCR", KEYS[1])
+            redis.call("EXPIRE", KEYS[1], ARGV[1])
+            return v
+        """, Long.class);
+
 
     @Override
     public void increaseViewCount(IncreaseViewCountDTO dto) {
@@ -42,7 +50,11 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
                 .setIfAbsent(viewDeDupKey, "1", 6, TimeUnit.HOURS);
 
         if(Boolean.TRUE.equals(isFirstView)){
-            redisTemplate.opsForValue().increment(viewCountKey);
+            redisTemplate.execute(
+                    INCR_WITH_TTL,
+                    List.of(viewCountKey),
+                    300
+            );
         }else {
             log.info("중복임");
 
@@ -50,7 +62,10 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
 
     }
 
+
+
     @Override
+    @Deprecated
     public void increaseViewCount(IncreaseViewCountDTO dto, long viewCount) {
         String viewCountKey = getViewCountKey(dto.boardType(), dto.boardPk());
         String viewDeDupKey = getViewDeDupKey(dto);
@@ -70,12 +85,15 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
 
     }
 
+    @Deprecated
     public boolean existsViewCount(ExistsViewCountDTO dto) {
         String viewCountKey = getViewCountKey(dto.boardType(), dto.boardPk());
 
         return  redisTemplate.hasKey(viewCountKey);
 
     }
+
+
 
     @Override
     public String saveHeartBeat(SaveHeartBeatDTO dto) {
@@ -85,11 +103,6 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
 
         redisTemplate.opsForList().rightPush(hbKey, String.valueOf(now));
         redisTemplate.expire(hbKey, HEARTBEAT_TTL);
-
-
-
-
-
 
        /* if (last - first >= HEARTBEAT_TIME_PERIOD) {
             return true;
@@ -114,13 +127,10 @@ public class ViewRedisRepositoryImpl implements ViewRedisRepository{
 
         if(times == null || times.size() < 2)
         {
-
             return new FindByHbKeyResult(size, null);
         }
 
-
         return new FindByHbKeyResult(size, times);
-
     }
 
     public void deleteKey(String key)

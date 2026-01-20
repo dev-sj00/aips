@@ -25,12 +25,9 @@ public class ViewServiceImpl implements ViewService {
     @Override
     public void increaseViewCount(IncreaseViewCountDTO dto) {
 
-        if(viewRedisRepository.existsViewCount(new ExistsViewCountDTO(dto.boardType(), dto.boardPk()))) {
+
             viewRedisRepository.increaseViewCount(dto);
-        }else{
-            ViewEntity viewEntity = viewRepository.findByBoardPkAndBoardType(dto.boardPk(), dto.boardType());
-            viewRedisRepository.increaseViewCount(dto, viewEntity.getViewCount() + 1);
-        }
+
 
 
 

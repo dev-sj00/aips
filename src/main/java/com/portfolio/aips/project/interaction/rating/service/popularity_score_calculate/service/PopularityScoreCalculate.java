@@ -7,5 +7,5 @@ import com.portfolio.aips.project.interaction.rating.service.popularity_score_ca
 import java.util.List;
 
 public interface PopularityScoreCalculate {
-    List<CalculatePopularityScoreResult> calculatePopularityScore(CalculatePopularityScoreCommand command);
+    CalculatePopularityScoreResult calculatePopularityScore(CalculatePopularityScoreCommand command);
 }

@@ -2,9 +2,10 @@ package com.portfolio.aips.project.interaction.view.repo;
 
 import com.portfolio.aips.project.interaction.enums.BoardType;
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
-import com.portfolio.aips.project.interaction.view.repo.dto.request.FindAllViewBatchProcDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.result.FindAllViewBatchProcResult;
 import com.portfolio.aips.project.utils.BatchUtils;
+import com.portfolio.aips.project.utils.virtual_thread_utils.BoundedExecutor;
+import com.portfolio.aips.project.utils.virtual_thread_utils.VirtualThreadBoundedExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
@@ -13,15 +14,11 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.*;
 
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,42 +30,98 @@ public class ViewBatchRepositoryImpl implements ViewBatchRepository {
 
 
     @Override
-    public void     updateViewBatchProc(List<ViewEntity> viewEntities,  int batchSize) throws InterruptedException {
-        String sql = "UPDATE view SET view_count = ? WHERE board_pk = ? AND board_type = ?";
+    public void     updateViewBatchProc(List<ViewEntity> viewEntities,  int batchSize)  {
+        String sql = "UPDATE view SET view_count = view_count + ? WHERE board_pk = ? AND board_type = ?";
 
 
 
-        List<List<ViewEntity>> batches = BatchUtils.chunk(viewEntities, 500);
+        List<List<ViewEntity>> batches = BatchUtils.chunk(viewEntities, 1000);
+
+        BoundedExecutor boundedExecutor = VirtualThreadBoundedExecutor
+                .builder()
+                .executor(vtExecutor)
+                .semaphore(dbSemaphore)
+                .timeout(5, TimeUnit.SECONDS)
+                .build();
 
         for(List<ViewEntity> batch : batches) {
-            boolean acquired = dbSemaphore.tryAcquire(5, TimeUnit.SECONDS);
 
-            vtExecutor.submit(() -> {
-                try {
-                    if (!acquired) {
-                        log.warn("DB 세마포어 타임아웃, 배치 스킵");
-                        return;
-                    }
-                    executeUpdateViewBatchProc(sql, batch);
-                } finally {
-                    if (!acquired) { //세마포어 획득 못했을 시 반환 안함
-                        dbSemaphore.release(); // 세마포어 반환
-                    }
-                }
-            });
+
+            boundedExecutor
+                    .execute(executeUpdateViewBatchProc(sql, batch));
+
 
         }
-
-        /*em.clear();  1차 캐시 1분마다 초기화, elastic 에서 조회하기 때문에 필요 없음 */
 
 
     }
 
+    @Override
+    public List<FindAllViewBatchProcResult> findAllViewBatchProc(List<ViewEntity> viewEntities,  int batchSize) {
 
 
 
+        List<List<ViewEntity>> batches = BatchUtils.chunk(viewEntities, batchSize);
 
-    private void executeUpdateViewBatchProc(String sql, List<ViewEntity> batch) {
+        List<Future<List<FindAllViewBatchProcResult>>> futures = new ArrayList<>();
+
+
+        BoundedExecutor boundedExecutor = VirtualThreadBoundedExecutor
+                .builder()
+                .executor(vtExecutor)
+                .semaphore(dbSemaphore)
+                .timeout(5, TimeUnit.SECONDS)
+                .build();
+
+        for(List<ViewEntity> batch : batches) {
+
+            Future<List<FindAllViewBatchProcResult>> future =
+                    boundedExecutor.submit(() -> executeFindAllViewBatchProc(batch));
+
+            futures.add(future);
+
+        }
+
+        return VirtualThreadBoundedExecutor.join(futures);
+    }
+
+    private List<FindAllViewBatchProcResult> executeFindAllViewBatchProc(List<ViewEntity> batch)  {
+
+
+
+        String placeholders = batch.stream()
+                .map(k -> "(?, ?)")
+                .collect(Collectors.joining(","));
+
+        String sql = """
+        SELECT *
+        FROM view
+        WHERE (board_pk, board_type) IN (%s)
+        """.formatted(placeholders);
+
+
+
+        return jdbcTemplate.query(
+                sql,  ps -> {
+                    int i = 1; // PS index는 1부터 시작
+                    for (ViewEntity entity : batch) {
+                        ps.setLong(i++, entity.getBoardPk());
+                        ps.setString(i++, entity.getBoardType().name());
+                    }
+                },
+                (rs, rowNum) ->
+
+            new FindAllViewBatchProcResult(
+                    BoardType.valueOf(rs.getString("board_type")),
+                    rs.getLong("board_pk"),
+                    rs.getLong("view_count")
+
+            )
+        );
+    }
+
+
+    private Runnable executeUpdateViewBatchProc(String sql, List<ViewEntity> batch) {
         log.info("executing batch: {}", sql);
         jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
 
@@ -86,5 +139,6 @@ public class ViewBatchRepositoryImpl implements ViewBatchRepository {
                 return batch.size();
             }
         });
+        return null;
     }
 }

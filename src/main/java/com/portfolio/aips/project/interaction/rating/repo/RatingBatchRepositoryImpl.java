@@ -5,18 +5,17 @@ import com.portfolio.aips.project.interaction.rating.entity.RatingEntity;
 import com.portfolio.aips.project.interaction.rating.repo.result.PopularityScoreElementsResult;
 import com.portfolio.aips.project.interaction.rating.service.rating_scheduler.command.FindAllPopularityScoreElementsWithTempTableCommand;
 import com.portfolio.aips.project.utils.BatchUtils;
+import com.portfolio.aips.project.utils.virtual_thread_utils.BoundedExecutor;
+import com.portfolio.aips.project.utils.virtual_thread_utils.VirtualThreadBoundedExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Repository
 @RequiredArgsConstructor
@@ -39,31 +38,31 @@ public class RatingBatchRepositoryImpl implements RatingBatchRepository {
 
 
         List<List<RatingEntity>> batches = BatchUtils.chunk(ratingEntities, batchSize);
-        Queue<List<PopularityScoreElementsResult>> resultQueue = new ConcurrentLinkedQueue<>();
+        List< Future <List<PopularityScoreElementsResult>>> futures = new ArrayList<>();
+
+
+        BoundedExecutor boundedExecutor = VirtualThreadBoundedExecutor
+                .builder()
+                .executor(vtExecutor)
+                .semaphore(dbSemaphore)
+                .timeout(5L,  TimeUnit.SECONDS)
+                .build();
 
         for(List<RatingEntity> batch : batches) {
 
-            boolean acquired = dbSemaphore.tryAcquire(5, TimeUnit.SECONDS);
+            Future <List<PopularityScoreElementsResult>> future = boundedExecutor
+                    .submit(() -> executeAvgRatingBatch(batch, tempBatchSize));
 
-            vtExecutor.submit(() -> {
-                try {
-                    if (!acquired) {
-                        log.warn("DB 세마포어 타임아웃, 배치 스킵");
-                        return;
-                    }
-                    resultQueue.add(executeAvgRatingBatch(batch, tempBatchSize));
-                } finally {
-                    if (!acquired) { //세마포어 획득 못했을 시 반환 안함
-                        dbSemaphore.release(); // 세마포어 반환
-                    }
-                }
-            });
+
+
+            futures.add(future);
+
         }
 
 
-        return resultQueue.stream()
-                .flatMap(List::stream) // List 안의 모든 요소를 단일 Stream으로 변환
-                .toList();
+
+
+        return VirtualThreadBoundedExecutor.join(futures);
 
     }
 

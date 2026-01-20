@@ -1,23 +1,19 @@
 package com.portfolio.aips.project.elastic_search.view.view_el_bulk;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.BulkRequest;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.command.UpdateViewCountProcCommand;
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.enums.IndexType;
+import com.portfolio.aips.project.utils.virtual_thread_utils.VirtualThreadBoundedExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.*;
 
 @Service
 @RequiredArgsConstructor
@@ -28,48 +24,43 @@ public class ViewELBulkServiceImpl implements ViewELBulkService {
     private final Semaphore esSemaphore;
 
     private static final int BLOCKING_QUEUE_CAPACITY = 10000;
-    private static final int BULK_QUEUE_CAPACITY = 500;
 
     BlockingQueue<BulkOperation> queue = new LinkedBlockingQueue<>(BLOCKING_QUEUE_CAPACITY);
 
+
     @Override
-    public void updateViewCountProc(List<UpdateViewCountProcCommand> commands) throws IOException {
+    public void updateViewCountProc(List<UpdateViewCountProcCommand> commands){
 
 
 
         for(UpdateViewCountProcCommand command : commands) {
             BulkOperation op = getUpdateViewCountBulkOperation(command);
             boolean offered = queue.offer(op);
+            log.info("commands");
             if (!offered) {
-                log.warn("ES Bulk 큐가 다 찼음, 다음 스케줄러에서 처리: {}", command);
-
+                log.warn("BulkOperation queue full. drop op. command={}", command);
             }
         }
 
-        while(!queue.isEmpty()) {
-            List<BulkOperation> bulkOperations = new ArrayList<>(BULK_QUEUE_CAPACITY);
+        VirtualThreadBoundedExecutor
+                .builder()
+                .semaphore(esSemaphore)
+                .executor(vtExecutor)
+                .timeout(5, TimeUnit.SECONDS)
+                .build()
+                .executeBatched(queue, 500,  this::executeUpdateViewCountProc);
 
-            queue.drainTo(bulkOperations, BULK_QUEUE_CAPACITY);
+        log.info("ViewELBulkServiceImpl.updateViewCountProc");
 
-            vtExecutor.submit(() -> {
-                try {
-                    executeUpdateViewCountProc(bulkOperations);
-                } catch (IOException e) {
-                    log.error(e.getMessage(), e);
-                }
-            });
-
-        }
 
 
     }
 
-    private void executeUpdateViewCountProc(List<BulkOperation> bulkOperations) throws IOException {
+    private void executeUpdateViewCountProc(List<BulkOperation> bulkOperations)  {
         try {
 
-            esSemaphore.acquire();
             BulkResponse response = esClient.bulk(b-> b.operations(bulkOperations));
-
+            log.info("bulk operation response={}", response);
             if (response.errors()) {
                 response.items().forEach(item -> {
                     if (item.error() != null) {
@@ -84,11 +75,9 @@ public class ViewELBulkServiceImpl implements ViewELBulkService {
 
 
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.warn("Bulk execution interrupted", e);
-        } finally {
-            esSemaphore.release();
+            log.info("executeUpdateViewCountProc");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

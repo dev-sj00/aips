@@ -11,9 +11,13 @@ import java.util.List;
 
 public interface ViewRedisRepository {
     void increaseViewCount(IncreaseViewCountDTO dto);
-    void increaseViewCount(IncreaseViewCountDTO dto, long viewCount);
 
+    @Deprecated
+    void increaseViewCount(IncreaseViewCountDTO dto, long viewCount);
+    @Deprecated
     boolean existsViewCount(ExistsViewCountDTO dto);
+
+
     FindByHbKeyResult findByHbKey(String hbKey);
     void deleteKey(String key);
     String saveHeartBeat(SaveHeartBeatDTO dto); //return HearBeat redis key

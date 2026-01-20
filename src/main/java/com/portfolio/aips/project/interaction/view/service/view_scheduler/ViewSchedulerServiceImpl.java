@@ -5,6 +5,8 @@ import com.portfolio.aips.project.elastic_search.view.view_el_bulk.command.Updat
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
 import com.portfolio.aips.project.interaction.view.repo.ViewBatchRepository;
 import com.portfolio.aips.project.interaction.view.repo.ViewRedisRepository;
+import com.portfolio.aips.project.interaction.view.repo.dto.request.RedisDecreaseViewCountDTO;
+import com.portfolio.aips.project.interaction.view.repo.dto.result.FindAllViewBatchProcResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
@@ -39,20 +41,31 @@ public class ViewSchedulerServiceImpl implements ViewSchedulerService {
 
         log.info("entities size: {}", entities.size());
 
-        viewBatchRepository.updateViewBatchProc(entities, 50);
+        viewBatchRepository.updateViewBatchProc(entities, 300);
+
+        List<FindAllViewBatchProcResult> findViewResults = viewBatchRepository.findAllViewBatchProc(entities, 1000);
+
+        findViewResults.forEach(viewBatch -> {
+            log.info("view batch: {}", viewBatch);
+        });
 
         //증분 색인
-        viewELBulkService.updateViewCountProc(getUpdateViewCountProcCommand(entities));
+        viewELBulkService.updateViewCountProc(getUpdateViewCountProcCommand(findViewResults));
+
+        findViewResults.forEach(viewEntity -> {
+            log.info("view entity: {}", viewEntity);
+           viewRedisRepository.decreaseViewCount(new RedisDecreaseViewCountDTO(viewEntity.boardPk(), viewEntity.boardType()));
+        });
 
 
 
     }
 
-    private List<UpdateViewCountProcCommand> getUpdateViewCountProcCommand(List<ViewEntity> entities) {
+    private List<UpdateViewCountProcCommand> getUpdateViewCountProcCommand(List<FindAllViewBatchProcResult> entities) {
         List<UpdateViewCountProcCommand> commands = new ArrayList<>();
 
-        for (ViewEntity entity : entities) {
-            UpdateViewCountProcCommand command = new UpdateViewCountProcCommand(entity.getBoardPk(), entity.getBoardType(), entity.getViewCount());
+        for (FindAllViewBatchProcResult entity : entities) {
+            UpdateViewCountProcCommand command = new UpdateViewCountProcCommand(entity.boardPk(), entity.boardType(), entity.viewCount());
             commands.add(command);
         }
 

@@ -8,4 +8,5 @@ import java.util.List;
 
 public interface ViewBatchRepository {
     void updateViewBatchProc(List<ViewEntity> viewEntities, int batchSize) throws InterruptedException;
+    List<FindAllViewBatchProcResult> findAllViewBatchProc(List<ViewEntity> viewEntities,  int batchSize) throws InterruptedException;
 }
