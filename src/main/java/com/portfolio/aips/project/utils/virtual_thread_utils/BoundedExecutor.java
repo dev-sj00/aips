@@ -11,6 +11,7 @@ public interface BoundedExecutor {
 
     <T> Future<T> submit(Callable<T> task);
 
+     <T> List<T> join(List<Future<List<T>>> futures);
 
 
     <T> void executeBatched(

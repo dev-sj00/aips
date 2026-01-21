@@ -24,8 +24,7 @@ import java.util.concurrent.*;
 public class RatingBatchRepositoryImpl implements RatingBatchRepository {
 
     private final JdbcTemplate jdbcTemplate;
-    private final ExecutorService vtExecutor;
-    private final Semaphore dbSemaphore;
+    private final BoundedExecutor dbBoundedExecutor;
 
 
 
@@ -41,19 +40,12 @@ public class RatingBatchRepositoryImpl implements RatingBatchRepository {
         List< Future <List<PopularityScoreElementsResult>>> futures = new ArrayList<>();
 
 
-        BoundedExecutor boundedExecutor = VirtualThreadBoundedExecutor
-                .builder()
-                .executor(vtExecutor)
-                .semaphore(dbSemaphore)
-                .timeout(5L,  TimeUnit.SECONDS)
-                .build();
+
 
         for(List<RatingEntity> batch : batches) {
 
-            Future <List<PopularityScoreElementsResult>> future = boundedExecutor
+            Future <List<PopularityScoreElementsResult>> future = dbBoundedExecutor
                     .submit(() -> executeAvgRatingBatch(batch, tempBatchSize));
-
-
 
             futures.add(future);
 
@@ -62,7 +54,7 @@ public class RatingBatchRepositoryImpl implements RatingBatchRepository {
 
 
 
-        return VirtualThreadBoundedExecutor.join(futures);
+        return dbBoundedExecutor.join(futures);
 
     }
 

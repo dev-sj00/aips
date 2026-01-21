@@ -43,7 +43,7 @@ public class VirtualThreadBoundedExecutor implements BoundedExecutor {
         return executor.submit(() -> callWithSemaphore(task));
     }
 
-    public static <T> List<T> join(List<Future<List<T>>> futures) {
+    public  <T> List<T> join(List<Future<List<T>>> futures) {
         try (ExecutorService vt = Executors.newVirtualThreadPerTaskExecutor()) {
             Future<List<T>> joined = vt.submit(() ->
                     futures.stream()

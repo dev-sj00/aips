@@ -25,8 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ViewBatchRepositoryImpl implements ViewBatchRepository {
     private final JdbcTemplate jdbcTemplate;
-    private final ExecutorService vtExecutor;
-    private final Semaphore dbSemaphore;
+    private final BoundedExecutor dbBoundedExecutor;
 
 
     @Override
@@ -37,20 +36,11 @@ public class ViewBatchRepositoryImpl implements ViewBatchRepository {
 
         List<List<ViewEntity>> batches = BatchUtils.chunk(viewEntities, 1000);
 
-        BoundedExecutor boundedExecutor = VirtualThreadBoundedExecutor
-                .builder()
-                .executor(vtExecutor)
-                .semaphore(dbSemaphore)
-                .timeout(5, TimeUnit.SECONDS)
-                .build();
+
 
         for(List<ViewEntity> batch : batches) {
-
-
-            boundedExecutor
+            dbBoundedExecutor
                     .execute(executeUpdateViewBatchProc(sql, batch));
-
-
         }
 
 
@@ -66,23 +56,18 @@ public class ViewBatchRepositoryImpl implements ViewBatchRepository {
         List<Future<List<FindAllViewBatchProcResult>>> futures = new ArrayList<>();
 
 
-        BoundedExecutor boundedExecutor = VirtualThreadBoundedExecutor
-                .builder()
-                .executor(vtExecutor)
-                .semaphore(dbSemaphore)
-                .timeout(5, TimeUnit.SECONDS)
-                .build();
+
 
         for(List<ViewEntity> batch : batches) {
 
             Future<List<FindAllViewBatchProcResult>> future =
-                    boundedExecutor.submit(() -> executeFindAllViewBatchProc(batch));
+                    dbBoundedExecutor.submit(() -> executeFindAllViewBatchProc(batch));
 
             futures.add(future);
 
         }
 
-        return VirtualThreadBoundedExecutor.join(futures);
+        return dbBoundedExecutor.join(futures);
     }
 
     private List<FindAllViewBatchProcResult> executeFindAllViewBatchProc(List<ViewEntity> batch)  {

@@ -5,6 +5,7 @@ import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.command.UpdateViewCountProcCommand;
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.enums.IndexType;
+import com.portfolio.aips.project.utils.virtual_thread_utils.BoundedExecutor;
 import com.portfolio.aips.project.utils.virtual_thread_utils.VirtualThreadBoundedExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +21,7 @@ import java.util.concurrent.*;
 @Slf4j
 public class ViewELBulkServiceImpl implements ViewELBulkService {
     private final ElasticsearchClient esClient;
-    private final ExecutorService vtExecutor;
-    private final Semaphore esSemaphore;
+    private final BoundedExecutor esBoundedExecutor;
 
     private static final int BLOCKING_QUEUE_CAPACITY = 10000;
 
@@ -42,12 +42,7 @@ public class ViewELBulkServiceImpl implements ViewELBulkService {
             }
         }
 
-        VirtualThreadBoundedExecutor
-                .builder()
-                .semaphore(esSemaphore)
-                .executor(vtExecutor)
-                .timeout(5, TimeUnit.SECONDS)
-                .build()
+        esBoundedExecutor
                 .executeBatched(queue, 500,  this::executeUpdateViewCountProc);
 
         log.info("ViewELBulkServiceImpl.updateViewCountProc");
