@@ -1,6 +1,8 @@
 package com.portfolio.aips.project.utils;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.core.BulkResponse;
+import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
 import co.elastic.clients.elasticsearch.indices.CreateIndexResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,6 +14,7 @@ import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Objects;
 
 public class ESTemplateUtils {
@@ -32,6 +35,32 @@ public class ESTemplateUtils {
     public static ESJsonTemplateRequestBuilder responseBuilder(ElasticsearchClient client) {
         return new ESJsonTemplateRequestBuilder(client);
     }
+
+    public static void executeBulk(ElasticsearchClient esClient, List<BulkOperation> bulkOperations)  {
+        try {
+
+            BulkResponse response = esClient.bulk(b-> b.operations(bulkOperations));
+            log.info("bulk operation response={}", response);
+            if (response.errors()) {
+                response.items().forEach(item -> {
+                    if (item.error() != null) {
+                        log.error(
+                                "ES bulk update failed. index={}, id={}, reason={}",
+                                item.index(),
+                                item.id(),
+                                item.error().reason()
+                        );
+                    }
+                });
+
+
+            }
+            log.info("executeUpdateViewCountProc");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     public static void createIndex(ElasticsearchClient client, String indexName, String jsonPath) {
         try {

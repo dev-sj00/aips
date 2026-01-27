@@ -1,10 +1,9 @@
 package com.portfolio.aips.project.interaction.rating.repo;
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import com.portfolio.aips.project.interaction.rating.dto.RedisSaveRatingsKeyDTO;
-import com.portfolio.aips.project.interaction.rating.dto.RedisSaveRatingsValueDTO;
-import com.portfolio.aips.project.interaction.rating.entity.RatingEntity;
-import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
+import com.portfolio.aips.project.interaction.rating.repo.result.FindAllWithScanResult;
+import com.portfolio.aips.project.interaction.common.repo.BoardRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.KeyScanOptions;
@@ -12,6 +11,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,16 +21,26 @@ import java.util.Objects;
 public class RatingRedisRepositoryImpl implements RatingRedisRepository {
 
     private final RedisTemplate<String, Object> redisTemplate;
+    private final BoardRepository boardRepository;
 
     @Override
     public void saveRatings(RedisSaveRatingsKeyDTO keyDto) {
         String key = "rating:recalc:b_type:"+keyDto.boardType()+":b_pk:"+keyDto.boardPk();
-        redisTemplate.opsForSet().add(key, "1");
+
+        Object value = redisTemplate.opsForValue().get(key);
+
+        if(value==null){
+            LocalDateTime createdDateTime = boardRepository.findByBoardPkAndBoardTypes(keyDto.boardPk(), keyDto.boardType());
+
+
+            redisTemplate.opsForValue()
+                    .set(key, createdDateTime.toString());
+        }
     }
 
-    public List<RatingEntity> findAllWithScan()
+    public List<FindAllWithScanResult> findAllWithScan()
     {
-        List<RatingEntity> entities = new ArrayList<>();
+        List<FindAllWithScanResult> entities = new ArrayList<>();
 
 
         KeyScanOptions options = (KeyScanOptions) KeyScanOptions.scanOptions()
@@ -46,11 +56,17 @@ public class RatingRedisRepositoryImpl implements RatingRedisRepository {
                     byte[] keyBytes = cursor.next();
                     String key = new String(keyBytes);
 
-                    String boardType = key.split(":")[2];
-                    long boardPk = Long.parseLong(key.split(":")[4]);
+                    String boardType = key.split(":")[3];
+                    long boardPk = Long.parseLong(key.split(":")[5]);
+
+                    LocalDateTime createdDateTime = LocalDateTime.parse
+                            (Objects.requireNonNull
+                                    (redisTemplate.opsForValue().get(key))
+                                    .toString());
 
 
-                    entities.add(getRatingEntity(boardPk, BoardType.valueOf(boardType)));
+
+                    entities.add(getFindAllWithScanResult(boardPk, BoardType.valueOf(boardType), createdDateTime));
                 }
             }
             return null;
@@ -59,11 +75,7 @@ public class RatingRedisRepositoryImpl implements RatingRedisRepository {
         return entities;
     }
 
-    private RatingEntity getRatingEntity(long boardPk, BoardType boardType) {
-        return RatingEntity
-                .builder()
-                .boardPk(boardPk)
-                .boardType(boardType)
-                .build();
+    private FindAllWithScanResult getFindAllWithScanResult(long boardPk, BoardType boardType, LocalDateTime createdDateTime) {
+        return new FindAllWithScanResult(boardPk, boardType, createdDateTime);
     }
 }

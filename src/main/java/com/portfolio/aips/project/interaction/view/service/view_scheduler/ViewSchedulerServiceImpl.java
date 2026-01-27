@@ -62,15 +62,13 @@ public class ViewSchedulerServiceImpl implements ViewSchedulerService {
     }
 
     private List<UpdateViewCountProcCommand> getUpdateViewCountProcCommand(List<FindAllViewBatchProcResult> entities) {
-        List<UpdateViewCountProcCommand> commands = new ArrayList<>();
-
-        for (FindAllViewBatchProcResult entity : entities) {
-            UpdateViewCountProcCommand command = new UpdateViewCountProcCommand(entity.boardPk(), entity.boardType(), entity.viewCount());
-            commands.add(command);
-        }
-
-        return commands;
-
+        return entities.stream()
+                .map(entity -> new UpdateViewCountProcCommand(
+                        entity.boardPk(),
+                        entity.boardType(),
+                        entity.viewCount()
+                ))
+                .toList();
     }
 
 

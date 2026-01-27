@@ -1,6 +1,6 @@
 package com.portfolio.aips.project.interaction.rating.service.rating.service;
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import com.portfolio.aips.project.interaction.rating.service.rating.command.SaveCommand;
 import com.portfolio.aips.project.url_service.archive.entity.ArchiveEntity;
 import com.portfolio.aips.project.url_service.archive.repo.ArchiveRepository;

@@ -1,6 +1,6 @@
 package com.portfolio.aips.project.elastic_search.view.view_el_bulk.enums;
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 
 import java.util.Arrays;
 

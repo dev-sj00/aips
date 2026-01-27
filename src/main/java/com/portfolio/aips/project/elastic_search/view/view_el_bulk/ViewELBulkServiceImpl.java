@@ -3,8 +3,10 @@ package com.portfolio.aips.project.elastic_search.view.view_el_bulk;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkResponse;
 import co.elastic.clients.elasticsearch.core.bulk.BulkOperation;
+import co.elastic.clients.json.JsonData;
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.command.UpdateViewCountProcCommand;
 import com.portfolio.aips.project.elastic_search.view.view_el_bulk.enums.IndexType;
+import com.portfolio.aips.project.utils.ESTemplateUtils;
 import com.portfolio.aips.project.utils.virtual_thread_utils.BoundedExecutor;
 import com.portfolio.aips.project.utils.virtual_thread_utils.VirtualThreadBoundedExecutor;
 import lombok.RequiredArgsConstructor;
@@ -52,28 +54,7 @@ public class ViewELBulkServiceImpl implements ViewELBulkService {
     }
 
     private void executeUpdateViewCountProc(List<BulkOperation> bulkOperations)  {
-        try {
-
-            BulkResponse response = esClient.bulk(b-> b.operations(bulkOperations));
-            log.info("bulk operation response={}", response);
-            if (response.errors()) {
-                response.items().forEach(item -> {
-                    if (item.error() != null) {
-                        log.error(
-                                "ES bulk update failed. index={}, id={}, reason={}",
-                                item.index(),
-                                item.id(),
-                                item.error().reason()
-                        );
-                    }
-                });
-
-
-            }
-            log.info("executeUpdateViewCountProc");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        ESTemplateUtils.executeBulk(esClient, bulkOperations);
     }
 
     private BulkOperation getUpdateViewCountBulkOperation(UpdateViewCountProcCommand command) {
@@ -83,11 +64,19 @@ public class ViewELBulkServiceImpl implements ViewELBulkService {
                         .index(IndexType.from(command.boardType()))
                         .id(command.boardPk().toString())
                         .action(a -> a
-                                .doc(Map.of("viewCount", command.viewCount()))
-                                .docAsUpsert(false) // doc 삭제 시 insert 안 함
+                                .script(s-> s
+                                        .inline(b -> b
+                                                .source("ctx._source.viewCount = params.increment")
+                                                .params(Map.of("increment", JsonData.of(command.viewCount())))
+                                        )
+                                )
+                                .docAsUpsert(false)
+                                )
+
+
                         )
-                )
-        );
+                );
+
     }
 
 

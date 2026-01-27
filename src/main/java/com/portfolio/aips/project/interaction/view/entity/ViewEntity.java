@@ -1,6 +1,6 @@
 package com.portfolio.aips.project.interaction.view.entity;
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import jakarta.persistence.*;
 import lombok.*;
 

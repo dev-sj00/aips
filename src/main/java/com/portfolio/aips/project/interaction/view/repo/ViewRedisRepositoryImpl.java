@@ -1,6 +1,6 @@
 package com.portfolio.aips.project.interaction.view.repo;
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.ExistsViewCountDTO;
 import com.portfolio.aips.project.interaction.view.repo.dto.request.IncreaseViewCountDTO;
@@ -14,7 +14,6 @@ import org.springframework.data.redis.core.KeyScanOptions;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Repository;
 
 import java.time.Duration;

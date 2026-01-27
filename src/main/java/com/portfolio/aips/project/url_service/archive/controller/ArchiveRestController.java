@@ -1,7 +1,7 @@
 package com.portfolio.aips.project.url_service.archive.controller;
 
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import com.portfolio.aips.project.interaction.view.service.view.ViewService;
 import com.portfolio.aips.project.interaction.view.service.view.command.CreateViewCommand;
 import com.portfolio.aips.project.tags.dto.CreateTagsCommand;

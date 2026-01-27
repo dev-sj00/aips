@@ -1,6 +1,6 @@
 package com.portfolio.aips.project.interaction.rating.entity;
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import jakarta.persistence.*;
 

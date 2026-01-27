@@ -2,7 +2,7 @@ package com.portfolio.aips.project.interaction.rating.service.rating.command;
 
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 
 
 public record SaveCommand(

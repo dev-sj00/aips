@@ -1,11 +1,10 @@
 package com.portfolio.aips.project.interaction.view.repo;
 
-import com.portfolio.aips.project.interaction.enums.BoardType;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import com.portfolio.aips.project.interaction.view.entity.ViewEntity;
 import com.portfolio.aips.project.interaction.view.repo.dto.result.FindAllViewBatchProcResult;
 import com.portfolio.aips.project.utils.BatchUtils;
 import com.portfolio.aips.project.utils.virtual_thread_utils.BoundedExecutor;
-import com.portfolio.aips.project.utils.virtual_thread_utils.VirtualThreadBoundedExecutor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
