@@ -16,22 +16,23 @@ import java.util.List;
 
 
 @Entity
-@Table(name = "sanction")
+@Table(name = "report")
 @EntityListeners(AuditingEntityListener.class)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @SuperBuilder
 @Getter
 @Setter
-public class SanctionEntity extends ReportBaseEntity {
+public class ReportEntity extends ReportBaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "sanction_pk")
+    @Column(name = "report_pk")
     private Long pk;
 
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "report_status")
     private ReportStatus reportStatus;
 
     private String reason; //제재 이유 제재자 알림으로 발송됨

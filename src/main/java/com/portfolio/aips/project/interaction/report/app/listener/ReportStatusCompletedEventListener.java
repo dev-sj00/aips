@@ -1,6 +1,5 @@
 package com.portfolio.aips.project.interaction.report.app.listener;
 
-import com.portfolio.aips.project.interaction.report.app.service.SanctionService;
 import com.portfolio.aips.project.interaction.report.domain.event.ReportStatusCompletedEvent;
 import com.portfolio.aips.project.interaction.report.domain.model.BanType;
 import com.portfolio.aips.project.interaction.sanction.app.ActiveSanctionService;
