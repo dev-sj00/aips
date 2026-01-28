@@ -28,6 +28,7 @@ public class ArchiveEntity extends URLServiceBaseEntity {
     private Long pk;
 
     @OneToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL,  orphanRemoval = true)
+    @JoinColumn(name = "url_status_pk", referencedColumnName = "url_status_pk")
     private URLStatusEntity urlStatusEntity;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)

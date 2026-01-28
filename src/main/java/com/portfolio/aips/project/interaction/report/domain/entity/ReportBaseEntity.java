@@ -31,11 +31,11 @@ public abstract class ReportBaseEntity {
     )
     private UsersEntity targetUser;
 
-    @JoinColumn(name = "target_user_pk")
+    @Column(name = "target_user_pk")
     private Long targetUserPk;
 
 
-    @JoinColumn(name = "reporter_user_pk")
+    @Column(name = "reporter_user_pk")
     private Long reporterUserPk;
 
     @ManyToOne(fetch = FetchType.LAZY)

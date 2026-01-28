@@ -33,11 +33,13 @@ public class ReportEntity extends ReportBaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "report_status")
-    private ReportStatus reportStatus;
+    @Builder.Default
+    private ReportStatus reportStatus = ReportStatus.PENDING;
 
     private String reason; //제재 이유 제재자 알림으로 발송됨
 
     @Column(name="ban_type")
+    @Enumerated(EnumType.STRING)
     private BanType banType;
 
     @Transient
@@ -62,8 +64,14 @@ public class ReportEntity extends ReportBaseEntity {
     {
         if(this.getReportStatus().equals(ReportStatus.COMPLETED))
         {
-            events.add(new ReportStatusCompletedEvent(this.getBanType(), this.getTargetUserPk()));
+            events.add(new ReportStatusCompletedEvent(this.getReason(), this.getTargetUserPk()));
         }
+    }
+
+    public void updateReasonAndBanType(String reason, BanType banType)
+    {
+        this.setReason(reason);
+        this.setBanType(banType);
     }
 
 

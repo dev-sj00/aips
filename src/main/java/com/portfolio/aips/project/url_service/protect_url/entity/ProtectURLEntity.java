@@ -20,6 +20,7 @@ public class ProtectURLEntity extends URLServiceBaseEntity {
     @Column(name = "protect_url_pk")
     private long pk;
 
+    @Column(name ="url_password")
     private String urlPassword;
 
 
@@ -38,6 +39,7 @@ public class ProtectURLEntity extends URLServiceBaseEntity {
 
 
     @OneToOne(fetch = FetchType.LAZY,  cascade = CascadeType.ALL,  orphanRemoval = true)
+    @JoinColumn(name = "url_status_pk", referencedColumnName = "url_status_pk")
     private URLStatusEntity urlStatusEntity;
 
 

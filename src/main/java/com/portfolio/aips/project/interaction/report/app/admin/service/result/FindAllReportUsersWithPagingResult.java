@@ -1,10 +1,14 @@
-package com.portfolio.aips.project.interaction.report.app.service.result;
+package com.portfolio.aips.project.interaction.report.app.admin.service.result;
+
 
 public record FindAllReportUsersWithPagingResult(
         Long userPk,
         String nickName,
         Long reportCounts
 ) {
+
+
+
 
     public static Builder builder() {
         return new Builder();

@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.interaction.report.app.service;
+package com.portfolio.aips.project.interaction.report.app.admin.service;
 
 
 import com.portfolio.aips.project.exception.CustomException;
@@ -6,40 +6,35 @@ import com.portfolio.aips.project.exception.ErrorCode;
 
 import com.portfolio.aips.project.interaction.report.domain.entity.QReportEntity;
 import com.portfolio.aips.project.interaction.report.domain.entity.ReportEntity;
+import com.portfolio.aips.project.interaction.report.domain.event.ReportStatusCompletedEvent;
 import com.portfolio.aips.project.interaction.report.domain.model.BanType;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportStatus;
-import com.portfolio.aips.project.interaction.report.infra.ReportRepository;
-import com.portfolio.aips.project.interaction.report.app.service.command.CreateReportCommand;
-import com.portfolio.aips.project.interaction.report.app.service.result.FindAllReportHistoryWithPagingResult;
-import com.portfolio.aips.project.interaction.report.app.service.result.FindAllReportUsersWithPagingResult;
+import com.portfolio.aips.project.interaction.report.app.admin.service.result.FindAllReportHistoryWithPagingResult;
+import com.portfolio.aips.project.interaction.report.app.admin.service.result.FindAllReportUsersWithPagingResult;
 
+import com.portfolio.aips.project.interaction.sanction.app.ActiveSanctionService;
 import com.querydsl.core.types.Projections;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ReportServiceImpl implements ReportService {
+public class ReportManagementServiceImpl implements ReportManagementService {
 
     private final JPAQueryFactory queryFactory;
-    private final ReportRepository reportRepository;
 
-    @Override
-    public void createReport(CreateReportCommand command) {
-        reportRepository.save(ReportEntity
-                .builder()
-                .reporterUserPk(command.reporterUserPk())
-                .targetUserPk(command.targetUserPk())
-                .reportUrl(command.reportUrl())
-                .reportContent(command.reportContent())
-                .build());
-    }
+    private final ActiveSanctionService activeSanctionService;
+    private final ApplicationEventPublisher applicationEventPublisher;
+
+
 
     @Override
     public List<FindAllReportUsersWithPagingResult> findAllReportUsersWithPaging(int page, int size, ReportStatus reportStatus) {
@@ -52,15 +47,16 @@ public class ReportServiceImpl implements ReportService {
 
 
         return queryFactory
-                .select(Projections.constructor(FindAllReportUsersWithPagingResult.class, r.targetUser.nickname, r.targetUserPk.count()))
+                .select(Projections.constructor(FindAllReportUsersWithPagingResult.class, r.targetUserPk, r.targetUser.nickname, r.targetUserPk.count()))
                 .from(r)
-                .groupBy(r.targetUserPk)
+                .groupBy(r.targetUserPk, r.targetUser.nickname)
                 .orderBy(r.targetUserPk.count().desc(), r.createdDateTime.max().desc())
                 .where(r.reportStatus.eq(reportStatus))
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
     }
+
 
     @Override
     public List<FindAllReportHistoryWithPagingResult> findAllReportHistoryWithPaging(int page, int size, long targetUserPk) {
@@ -84,6 +80,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
+    @Transactional
     public void updateReportStatus(long reportPk, ReportStatus reportStatus) {
         QReportEntity r = QReportEntity.reportEntity;
 
@@ -101,14 +98,34 @@ public class ReportServiceImpl implements ReportService {
 
 
         reportEntity.updateStatus(reportStatus);
-        reportEntity.updateStatusCompleted();
 
+        if(reportEntity.getReportStatus() == ReportStatus.COMPLETED)
+        {
+            activeSanctionService.createActiveSanction
+                    (reportEntity.getBanType(),
+                     reportEntity.getTargetUserPk());
+        }
+
+        reportEntity.updateStatusCompleted(); //sse 이벤트
+
+        applicationEventPublisher.publishEvent
+                (new ReportStatusCompletedEvent
+                (reportEntity.getReason(),
+                reportEntity.getTargetUserPk()));
 
 
     }
 
     @Override
     public void updateReasonAndBanType(long reportPk, String reason, BanType banType) {
+        QReportEntity  r = QReportEntity.reportEntity;
+        ReportEntity reportEntity = queryFactory.selectFrom(r).where(r.pk.eq(reportPk)).fetchOne();
+
+        if(reportEntity == null){
+            throw new RuntimeException("Sanction not found");
+        }
+
+        reportEntity.updateReasonAndBanType(reason, banType);
 
     }
 }

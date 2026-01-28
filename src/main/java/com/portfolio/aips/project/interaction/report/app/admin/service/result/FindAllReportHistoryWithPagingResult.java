@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.interaction.report.app.service.result;
+package com.portfolio.aips.project.interaction.report.app.admin.service.result;
 
 import com.portfolio.aips.project.interaction.report.domain.model.BanType;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportStatus;
@@ -11,7 +11,7 @@ public record FindAllReportHistoryWithPagingResult(Long pk,
                                                    BanType banType,
                                                    String reason,
                                                    String reportUrl,
-                                                   Long reporterNickName,
+                                                   String reporterNickName,
                                                    String reportContent,
                                                    ReportType reportType,
                                                    LocalDateTime createdDateTime) {

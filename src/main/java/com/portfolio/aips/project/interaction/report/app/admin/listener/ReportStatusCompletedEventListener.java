@@ -1,29 +1,31 @@
-package com.portfolio.aips.project.interaction.report.app.listener;
+package com.portfolio.aips.project.interaction.report.app.admin.listener;
 
 import com.portfolio.aips.project.interaction.report.domain.event.ReportStatusCompletedEvent;
 import com.portfolio.aips.project.interaction.report.domain.model.BanType;
 import com.portfolio.aips.project.interaction.sanction.app.ActiveSanctionService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ReportStatusCompletedEventListener {
 
-    private final ActiveSanctionService activeSanctionService;
 
     @TransactionalEventListener(
             phase = TransactionPhase.AFTER_COMMIT
     )
     public void handle(ReportStatusCompletedEvent event) {
 
-        BanType banType = event.banType();
+        String reason = event.reason();
         Long targetUserPk = event.targetUserPk();
-        
-        // 1. 제재 생성
-        activeSanctionService.createActiveSanction(banType, targetUserPk);
+
+        log.info("제제 알림 이벤트 리스너 실행");
+
 
 
         // 2. SSE / 알림 (구현해야함)

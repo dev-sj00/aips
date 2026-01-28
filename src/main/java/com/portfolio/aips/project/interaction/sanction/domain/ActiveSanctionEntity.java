@@ -4,6 +4,7 @@ import com.portfolio.aips.project.users.entity.UsersEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Getter
 public class ActiveSanctionEntity {
 
     @Id
@@ -31,7 +33,7 @@ public class ActiveSanctionEntity {
     )
     private UsersEntity targetUser;
 
-    @JoinColumn(name = "target_user_pk", nullable = false)
+    @Column(name = "target_user_pk", nullable = false)
     private Long targetUserPk;
 
 
