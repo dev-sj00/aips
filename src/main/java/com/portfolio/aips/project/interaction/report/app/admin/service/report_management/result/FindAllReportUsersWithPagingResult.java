@@ -1,4 +1,4 @@
-package com.portfolio.aips.project.interaction.report.app.admin.service.result;
+package com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result;
 
 
 public record FindAllReportUsersWithPagingResult(

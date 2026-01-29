@@ -4,7 +4,6 @@ import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDT
 import com.portfolio.aips.project.users.dto.RefreshSaveProcResultDTO;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.users.enums.UserEnvironmentType;
-import com.portfolio.aips.project.users.service.CustomUserDetailService;
 import com.portfolio.aips.project.users.service.RefreshToken.RefreshTokenService;
 import com.portfolio.aips.project.utils.CookieUtils;
 import com.portfolio.aips.project.utils.JwtUtils;
@@ -17,7 +16,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;

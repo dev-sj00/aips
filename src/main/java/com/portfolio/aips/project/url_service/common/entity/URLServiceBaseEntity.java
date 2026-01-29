@@ -1,6 +1,5 @@
 package com.portfolio.aips.project.url_service.common.entity;
 
-import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.utils.enums.LLMType;
 import jakarta.persistence.*;
 import lombok.Getter;

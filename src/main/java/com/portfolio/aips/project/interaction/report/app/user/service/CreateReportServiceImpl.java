@@ -16,10 +16,12 @@ public class CreateReportServiceImpl implements CreateReportService{
     public void createReport(CreateReportCommand command) {
         reportRepository.save(ReportEntity
                 .builder()
+
                 .reporterUserPk(command.reporterUserPk())
                 .targetUserPk(command.targetUserPk())
                 .reportUrl(command.reportUrl())
                 .reportType(command.reportType())
+                .boardType(command.boardType())
                 .reportContent(command.reportContent())
                 .build());
     }

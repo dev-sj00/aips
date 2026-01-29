@@ -19,14 +19,14 @@ public class BaseInviteEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "target_user_pk", insertable = false, updatable = false)
-    private UsersEntity targetUserEntity; //과거 검색한 유저 엔티티
+    private UsersEntity targetUsersEntity; //과거 검색한 유저 엔티티
 
     @Column(name = "target_user_pk", nullable = false)
     private long targetUserPk;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="owner_user_pk", insertable=false, updatable=false)
-    private UsersEntity ownerUserEntity;
+    private UsersEntity ownerUsersEntity;
 
     @Column(name="owner_user_pk", nullable = false)
     private long ownerUserPk;

@@ -1,10 +1,12 @@
 package com.portfolio.aips.project.interaction.report.app.service;
 
-import com.portfolio.aips.project.interaction.report.app.admin.service.ReportManagementService;
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
+import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.ReportManagementService;
+import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.command.FindAllReportUsersCommand;
 import com.portfolio.aips.project.interaction.report.app.user.service.CreateReportService;
 import com.portfolio.aips.project.interaction.report.app.user.service.command.CreateReportCommand;
-import com.portfolio.aips.project.interaction.report.app.admin.service.result.FindAllReportHistoryWithPagingResult;
-import com.portfolio.aips.project.interaction.report.app.admin.service.result.FindAllReportUsersWithPagingResult;
+import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result.FindAllReportHistoryWithPagingResult;
+import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result.FindAllReportUsersWithPagingResult;
 import com.portfolio.aips.project.interaction.report.domain.entity.ReportEntity;
 import com.portfolio.aips.project.interaction.report.domain.model.BanType;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportStatus;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -46,11 +49,12 @@ class ReportManagementServiceTest {
     @Test
     @DisplayName("신고 대상 유저별 신고 건수를 페이징으로 조회함")
     @Transactional
-    void findAllReportUsersWithPaging() {
+    void findAllReportUsers() {
         for(int i = 0; i < 15; i++) {
             createReportService.createReport(
                     new CreateReportCommand(
                             "23232",
+                            BoardType.Archive,
                             1L,
                             2L,
                             ReportType.ABUSE,
@@ -59,13 +63,13 @@ class ReportManagementServiceTest {
             );
         }
 
-        List<FindAllReportUsersWithPagingResult> result = reportManagementService.findAllReportUsersWithPaging(0, 10, ReportStatus.PENDING);
+        Page<FindAllReportUsersWithPagingResult> result = reportManagementService.findAllReportUsers(new FindAllReportUsersCommand(0, 10, ReportStatus.PENDING, null, null));
 
-        assertThat(result.size()).isEqualTo(1);
+        assertThat(result.getSize()).isEqualTo(1);
 
-        List< FindAllReportHistoryWithPagingResult> results2 = reportManagementService.findAllReportHistoryWithPaging(1, 10, 1);
+        Page< FindAllReportHistoryWithPagingResult> results2 = reportManagementService.findAllReportHistory(1, 10, 1);
 
-        assertThat(results2.size()).isEqualTo(5);
+        assertThat(results2.getSize()).isEqualTo(5);
 
     }
 
@@ -77,6 +81,7 @@ class ReportManagementServiceTest {
         createReportService.createReport(
                 new CreateReportCommand(
                         "23232",
+                        BoardType.Archive,
                         1L,
                         2L,
                         ReportType.ABUSE,
@@ -84,13 +89,13 @@ class ReportManagementServiceTest {
                 )
         );
 
-        List< FindAllReportHistoryWithPagingResult> results1 = reportManagementService.findAllReportHistoryWithPaging(1, 10, 1);
+        Page< FindAllReportHistoryWithPagingResult> results1 = reportManagementService.findAllReportHistory(1, 10, 1);
 
         for(FindAllReportHistoryWithPagingResult result : results1) {
             reportManagementService.updateReasonAndBanType(result.pk(), "사기", BanType.LOGIN_BAN_14D);
         }
 
-        List< FindAllReportHistoryWithPagingResult> results2 = reportManagementService.findAllReportHistoryWithPaging(1, 10, 1);
+        Page< FindAllReportHistoryWithPagingResult> results2 = reportManagementService.findAllReportHistory(1, 10, 1);
 
         for(FindAllReportHistoryWithPagingResult result : results2) {
             assertThat(result.banType()).isEqualTo(BanType.LOGIN_BAN_14D);

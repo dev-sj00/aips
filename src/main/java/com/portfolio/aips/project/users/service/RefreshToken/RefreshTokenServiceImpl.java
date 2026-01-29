@@ -7,7 +7,6 @@ import com.portfolio.aips.project.users.entity.RefreshTokenEntity;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.users.enums.UserEnvironmentType;
 import com.portfolio.aips.project.utils.JwtUtils;
-import com.portfolio.aips.project.utils.dto.CreateAcTokenDTO;
 import com.portfolio.aips.project.utils.dto.CreateRfTokenDTO;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
 

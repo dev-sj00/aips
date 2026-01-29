@@ -1,5 +1,6 @@
 package com.portfolio.aips.project.interaction.report.domain.entity;
 
+import com.portfolio.aips.project.interaction.common.enums.BoardType;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportType;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import jakarta.persistence.*;
@@ -20,7 +21,7 @@ import java.time.LocalDateTime;
 public abstract class ReportBaseEntity {
 
 
-    @Column(name="report_url")
+    @Column(name="report_url", nullable = false)
     String reportUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,11 +32,15 @@ public abstract class ReportBaseEntity {
     )
     private UsersEntity targetUser;
 
-    @Column(name = "target_user_pk")
+    @Enumerated(EnumType.STRING)
+    @Column(name = "board_type", nullable = false)
+    private BoardType boardType;
+
+    @Column(name = "target_user_pk", nullable = false)
     private Long targetUserPk;
 
 
-    @Column(name = "reporter_user_pk")
+    @Column(name = "reporter_user_pk", nullable = false)
     private Long reporterUserPk;
 
     @ManyToOne(fetch = FetchType.LAZY)
