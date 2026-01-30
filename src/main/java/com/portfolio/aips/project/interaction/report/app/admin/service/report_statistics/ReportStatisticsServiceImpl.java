@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class ReportStatisticsServiceImpl implements ReportStatisticsService {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public void findAllStatistics(FindAllStatisticsCommand command) {
+    public List<FindAllStatisticsResult> findAllStatistics(FindAllStatisticsCommand command) {
 
         QReportEntity r = QReportEntity.reportEntity;
 
@@ -62,11 +63,12 @@ public class ReportStatisticsServiceImpl implements ReportStatisticsService {
                                         ).multiply(100)));
 
 
-        queryFactory.select(Projections.constructor(FindAllStatisticsResult.class, r.reportType, percentage))
+        return queryFactory.select(Projections.constructor(FindAllStatisticsResult.class, r.reportType, percentage))
                 .from(r)
                 .where(mainCondition)
                 .groupBy(r.reportType)
-        ;
+                .fetch();
+
 
 
     }

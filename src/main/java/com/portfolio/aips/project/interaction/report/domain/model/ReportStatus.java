@@ -8,6 +8,8 @@ public enum ReportStatus {
     IN_PROGRESS,    // 제재 처리중 (조사/검토/적용중)
     CONFIRMED, //제재 확정
     COMPLETED,      // 제재 완료 (정지 적용)
+    SANCTION_ENDED, // 제제 끝남
     DUPLICATED,     // 동일 사안 (기존 제재에 병합)
     CANCELLED, //제재 취소
 }
+

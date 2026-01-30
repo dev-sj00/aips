@@ -51,10 +51,11 @@ public class UserManagementServiceImpl implements UserManagementService{
     }
 
     @Override
-    public void createReportInProgress(Long adminUserPk) {
+    public void createReportInProgress(Long adminUserPk, Long targetUserPk) {
         reportRepository.save(ReportEntity.builder()
                         .reportType(ReportType.ETC)
                         .reporterUserPk(adminUserPk)
+                        .targetUserPk(targetUserPk)
                         .reportUrl("운영자 신고")
                         .reportContent("운영자가 신고한 유저입니다.")
                         .boardType(BoardType.Archive)

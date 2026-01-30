@@ -45,5 +45,9 @@ public class ActiveSanctionEntity {
     private LocalDateTime endDateTime;
 
 
+    public void updateEndDateTime(LocalDateTime endDateTime) {
+        this.endDateTime = endDateTime;
+    }
+
 
 }

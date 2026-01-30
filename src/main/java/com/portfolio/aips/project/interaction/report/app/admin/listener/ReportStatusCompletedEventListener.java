@@ -1,11 +1,8 @@
 package com.portfolio.aips.project.interaction.report.app.admin.listener;
 
 import com.portfolio.aips.project.interaction.report.domain.event.ReportStatusCompletedEvent;
-import com.portfolio.aips.project.interaction.report.domain.model.BanType;
-import com.portfolio.aips.project.interaction.sanction.app.ActiveSanctionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;

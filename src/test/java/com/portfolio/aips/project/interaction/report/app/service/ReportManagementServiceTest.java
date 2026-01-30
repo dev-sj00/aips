@@ -5,8 +5,8 @@ import com.portfolio.aips.project.interaction.report.app.admin.service.report_ma
 import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.command.FindAllReportUsersCommand;
 import com.portfolio.aips.project.interaction.report.app.user.service.CreateReportService;
 import com.portfolio.aips.project.interaction.report.app.user.service.command.CreateReportCommand;
-import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result.FindAllReportHistoryWithPagingResult;
-import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result.FindAllReportUsersWithPagingResult;
+import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result.FindReportResult;
+import com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result.FindAllReportUsersResult;
 import com.portfolio.aips.project.interaction.report.domain.entity.ReportEntity;
 import com.portfolio.aips.project.interaction.report.domain.model.BanType;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportStatus;
@@ -63,13 +63,13 @@ class ReportManagementServiceTest {
             );
         }
 
-        Page<FindAllReportUsersWithPagingResult> result = reportManagementService.findAllReportUsers(new FindAllReportUsersCommand(0, 10, ReportStatus.PENDING, null, null));
+        Page<FindAllReportUsersResult> result = reportManagementService.findAllReportUsers(new FindAllReportUsersCommand(0, 10, ReportStatus.PENDING, null, null));
 
-        assertThat(result.getSize()).isEqualTo(1);
+        assertThat(result.getNumberOfElements()).isEqualTo(1);
 
-        Page< FindAllReportHistoryWithPagingResult> results2 = reportManagementService.findAllReportHistory(1, 10, 1);
+        Page<FindReportResult> results2 = reportManagementService.findAllReportHistory(1, 10, 1);
 
-        assertThat(results2.getSize()).isEqualTo(5);
+        assertThat(results2.getNumberOfElements()).isEqualTo(5);
 
     }
 
@@ -89,15 +89,15 @@ class ReportManagementServiceTest {
                 )
         );
 
-        Page< FindAllReportHistoryWithPagingResult> results1 = reportManagementService.findAllReportHistory(1, 10, 1);
+        Page<FindReportResult> results1 = reportManagementService.findAllReportHistory(1, 10, 1);
 
-        for(FindAllReportHistoryWithPagingResult result : results1) {
+        for(FindReportResult result : results1) {
             reportManagementService.updateReasonAndBanType(result.pk(), "사기", BanType.LOGIN_BAN_14D);
         }
 
-        Page< FindAllReportHistoryWithPagingResult> results2 = reportManagementService.findAllReportHistory(1, 10, 1);
+        Page<FindReportResult> results2 = reportManagementService.findAllReportHistory(1, 10, 1);
 
-        for(FindAllReportHistoryWithPagingResult result : results2) {
+        for(FindReportResult result : results2) {
             assertThat(result.banType()).isEqualTo(BanType.LOGIN_BAN_14D);
             assertThat(result.reason()).isEqualTo("사기");
         }

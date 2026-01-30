@@ -1,7 +1,7 @@
 package com.portfolio.aips.project.interaction.report.app.admin.service.report_management.result;
 
 
-public record FindAllReportUsersWithPagingResult(
+public record FindAllReportUsersResult(
         Long userPk,
         String nickName,
         Long reportCounts
@@ -34,8 +34,8 @@ public record FindAllReportUsersWithPagingResult(
             return this;
         }
 
-        public FindAllReportUsersWithPagingResult build() {
-            return new FindAllReportUsersWithPagingResult(
+        public FindAllReportUsersResult build() {
+            return new FindAllReportUsersResult(
                     userPk,
                     nickName,
                     reportCounts
