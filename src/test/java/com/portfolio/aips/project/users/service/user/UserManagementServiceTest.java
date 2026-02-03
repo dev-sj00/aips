@@ -5,10 +5,11 @@ import com.portfolio.aips.project.interaction.report.domain.entity.ReportEntity;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportStatus;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportType;
 import com.portfolio.aips.project.interaction.report.infra.ReportRepository;
+import com.portfolio.aips.project.management.domain.repo.UserManagementRepository;
 import com.portfolio.aips.project.users.entity.UsersEntity;
 import com.portfolio.aips.project.users.enums.UserRole;
 import com.portfolio.aips.project.users.repo.UsersRepository;
-import com.portfolio.aips.project.users.service.user.result.FindAllUsersResult;
+import com.portfolio.aips.project.management.domain.vo.FindAllUsersResultVO;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,14 +21,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
-class UserManagementServiceImplTest {
+class UserManagementJpaRepositoryImplTest {
 
     @Autowired
-    private UserManagementService userManagementService;
+    private UserManagementRepository userManagementRepository;
 
     @Autowired
     private UsersRepository usersRepository;
@@ -55,7 +55,7 @@ class UserManagementServiceImplTest {
     }
 
     @Test
-    void findAllUsers_returnsPagedUsers() {
+    void findAllUsers_returnsPagedUsersWithOffssetAndLimit() {
         // given 추가 유저 9명 생성 -> 총 10명
         for (int i = 0; i < 9; i++) {
             usersRepository.save(
@@ -69,7 +69,7 @@ class UserManagementServiceImplTest {
         }
 
         // when
-        Page<FindAllUsersResult> page = userManagementService.findAllUsers(0, 5);
+        Page<FindAllUsersResultVO> page = userManagementRepository.findAllUsersWithOffsetAndLimit(0, 5);
 
         // then
         assertThat(page.getContent()).hasSize(5);
@@ -78,12 +78,12 @@ class UserManagementServiceImplTest {
     }
 
     @Test
-    void updateUserRole_changesUserRole() {
+    void updateUserRole_changesUserRoleByUserPkAndRole() {
         // given
         assertThat(testUser.getRole()).isEqualTo(UserRole.ROLE_USER);
 
         // when
-        userManagementService.updateUserRole(testUser.getPk(), UserRole.ROLE_ADMIN);
+        userManagementRepository.updateUserRoleByUserPk(testUser.getPk(), UserRole.ROLE_ADMIN);
 
         entitymanager.flush();
 
@@ -93,9 +93,9 @@ class UserManagementServiceImplTest {
     }
 
     @Test
-    void createReportInProgress_savesReportWithInProgressStatus() {
+    void createReportInProgress_savesReportWithInProgressByAdminUserPkAndTargetUserPkStatus() {
         // when
-        userManagementService.createReportInProgress(testUser.getPk(), 1L);
+        userManagementRepository.createReportInProgressByAdminUserPkAndTargetUserPk(testUser.getPk(), 1L);
 
         // then
         List<ReportEntity> reports = reportRepository.findAll();

@@ -1,13 +1,13 @@
 package com.portfolio.aips.project.interaction.report.app.admin.service.report_statistics;
 
 import com.portfolio.aips.project.interaction.common.enums.BoardType;
-import com.portfolio.aips.project.interaction.report.app.admin.service.report_statistics.command.FindAllStatisticsCommand;
-import com.portfolio.aips.project.interaction.report.app.admin.service.report_statistics.result.FindAllStatisticsResult;
+import com.portfolio.aips.project.statistics.domain.repo.ReportStatisticsRepository;
+import com.portfolio.aips.project.statistics.app.service.command.FindAllStatisticsCommand;
+import com.portfolio.aips.project.statistics.app.service.result.FindAllStatisticsResult;
 import com.portfolio.aips.project.interaction.report.app.user.service.CreateReportService;
 import com.portfolio.aips.project.interaction.report.app.user.service.command.CreateReportCommand;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportDateUnit;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportType;
-import com.portfolio.aips.project.interaction.report.infra.ReportRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.within;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @Transactional
@@ -30,7 +29,7 @@ class ReportStatisticsSpringBootTest {
     private CreateReportService createReportService;
 
     @Autowired
-    private ReportStatisticsService reportStatisticsService;
+    private ReportStatisticsRepository reportStatisticsRepository;
 
     @Autowired
     private EntityManager em;
@@ -82,7 +81,7 @@ class ReportStatisticsSpringBootTest {
 
         // when
         List<FindAllStatisticsResult> results =
-                reportStatisticsService.findAllStatistics(command);
+                reportStatisticsRepository.findAllStatisticsByCommand(command);
 
         // then
         // then

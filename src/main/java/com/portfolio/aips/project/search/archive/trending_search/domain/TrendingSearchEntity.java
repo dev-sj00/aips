@@ -1,6 +1,5 @@
 package com.portfolio.aips.project.search.archive.trending_search.domain;
 
-import com.portfolio.aips.project.elastic_search.archive.service.archive_el_trending_search_log.enums.SearchDateRange;
 import jakarta.persistence.*;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
