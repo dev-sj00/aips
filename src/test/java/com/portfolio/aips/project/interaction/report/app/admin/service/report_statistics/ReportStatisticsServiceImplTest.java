@@ -1,9 +1,9 @@
 package com.portfolio.aips.project.interaction.report.app.admin.service.report_statistics;
 
 import com.portfolio.aips.project.interaction.common.enums.BoardType;
-import com.portfolio.aips.project.statistics.domain.repo.ReportStatisticsRepository;
-import com.portfolio.aips.project.statistics.app.service.command.FindAllStatisticsCommand;
-import com.portfolio.aips.project.statistics.app.service.result.FindAllStatisticsResult;
+import com.portfolio.aips.project.statistics.domain.repo.StatisticsRepository;
+import com.portfolio.aips.project.statistics.app.router.statistics_usecase.command.FindAllReportStatisticsCommand;
+import com.portfolio.aips.project.statistics.app.router.statistics_usecase.result.FindAllReportStatisticsResult;
 import com.portfolio.aips.project.interaction.report.app.user.service.CreateReportService;
 import com.portfolio.aips.project.interaction.report.app.user.service.command.CreateReportCommand;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportDateUnit;
@@ -28,8 +28,9 @@ class ReportStatisticsSpringBootTest {
     @Autowired
     private CreateReportService createReportService;
 
+
     @Autowired
-    private ReportStatisticsRepository reportStatisticsRepository;
+    private StatisticsRepository<FindAllReportStatisticsCommand, FindAllReportStatisticsResult> statisticsRepository;
 
     @Autowired
     private EntityManager em;
@@ -73,15 +74,15 @@ class ReportStatisticsSpringBootTest {
         em.flush();
         em.clear();
 
-        FindAllStatisticsCommand command =
-                new FindAllStatisticsCommand(
+        FindAllReportStatisticsCommand command =
+                new FindAllReportStatisticsCommand(
                         ReportDateUnit.WEEK,
                         BoardType.Archive
                 );
 
         // when
-        List<FindAllStatisticsResult> results =
-                reportStatisticsRepository.findAllStatisticsByCommand(command);
+        List<FindAllReportStatisticsResult> results =
+                statisticsRepository.findAllStatisticsByCommand(command);
 
         // then
         // then
@@ -89,8 +90,8 @@ class ReportStatisticsSpringBootTest {
 
         Map<ReportType, Double> map = results.stream()
                 .collect(Collectors.toMap(
-                        FindAllStatisticsResult::reportType,
-                        FindAllStatisticsResult::percentage
+                        FindAllReportStatisticsResult::reportType,
+                        FindAllReportStatisticsResult::percentage
                 ));
 
         assertThat(map.get(ReportType.SPAM)).isCloseTo(15.00, within(0.01));

@@ -1,7 +1,6 @@
 package com.portfolio.aips.project.visitor.infra.cache;
 
 import com.portfolio.aips.project.visitor.domain.repo.VisitorCacheRepository;
-import com.portfolio.aips.project.visitor.infra.persistence.VisitorStatisticsJpaRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
@@ -10,7 +9,7 @@ import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
-public class VisitorStatisticsRedisRepository implements VisitorCacheRepository {
+public class VisitorRedisRepository implements VisitorCacheRepository {
 
     private final RedisTemplate<String, Object> redisTemplate;
 

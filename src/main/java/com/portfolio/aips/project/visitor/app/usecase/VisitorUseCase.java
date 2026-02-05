@@ -1,8 +1,8 @@
 package com.portfolio.aips.project.visitor.app.usecase;
 
 import com.portfolio.aips.project.visitor.domain.repo.VisitorCacheRepository;
-import com.portfolio.aips.project.visitor.domain.repo.VisitorStatisticsRepository;
-import com.portfolio.aips.project.visitor.domain.vo.VisitorStatisticsVO;
+import com.portfolio.aips.project.visitor.domain.repo.VisitorRepository;
+import com.portfolio.aips.project.visitor.domain.repo.vo.SaveVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class VisitorUseCase {
 
     private final VisitorCacheRepository visitorCacheRepository;
-    private final VisitorStatisticsRepository visitorStatisticsRepository;
+    private final VisitorRepository visitorRepository;
 
 
     public void saveVisitorStatistic()
@@ -20,7 +20,7 @@ public class VisitorUseCase {
 
         if(totalCount != 0)
         {
-            visitorStatisticsRepository.save(new VisitorStatisticsVO(totalCount));
+            visitorRepository.save(new SaveVO(totalCount));
         }
 
     }

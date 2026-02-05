@@ -1,11 +1,11 @@
-package com.portfolio.aips.project.statistics.infra;
+package com.portfolio.aips.project.statistics.infra.statistics_repository;
 
 import com.portfolio.aips.project.interaction.common.enums.BoardType;
-import com.portfolio.aips.project.statistics.app.service.command.FindAllStatisticsCommand;
-import com.portfolio.aips.project.statistics.app.service.result.FindAllStatisticsResult;
+import com.portfolio.aips.project.statistics.app.router.statistics_usecase.command.FindAllReportStatisticsCommand;
+import com.portfolio.aips.project.statistics.app.router.statistics_usecase.result.FindAllReportStatisticsResult;
 import com.portfolio.aips.project.interaction.report.domain.entity.QReportEntity;
 import com.portfolio.aips.project.interaction.report.domain.model.ReportStatus;
-import com.portfolio.aips.project.statistics.domain.repo.ReportStatisticsRepository;
+import com.portfolio.aips.project.statistics.domain.repo.StatisticsRepository;
 import com.querydsl.core.types.Projections;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.Expressions;
@@ -14,6 +14,7 @@ import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Nullable;
@@ -22,16 +23,37 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class ReportStatisticsQueryDslRepositoryImpl implements ReportStatisticsRepository {
+public class ReportStatisticsQueryDslRepositoryImpl implements StatisticsRepository<FindAllReportStatisticsCommand, FindAllReportStatisticsResult> {
 
     private final JPAQueryFactory queryFactory;
 
+
+
+    private BooleanExpression findAllStatisticsCondition(FindAllReportStatisticsCommand command, QReportEntity q, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+
+        return q.reportStatus.ne(ReportStatus.CANCELLED)
+                .and(q.createdDateTime.between(startDateTime, endDateTime))
+                .and(hasBoardType(command.boardType(), q)
+                );
+
+
+    }
+
+    private BooleanExpression hasBoardType(@Nullable BoardType boardType, QReportEntity q) {
+
+        return boardType != null ? q.boardType.eq(boardType) : null;
+    }
+
+
+
     @Override
-    public List<FindAllStatisticsResult> findAllStatisticsByCommand(FindAllStatisticsCommand command) {
+    public List<FindAllReportStatisticsResult> findAllStatisticsByCommand(FindAllReportStatisticsCommand command) {
 
         QReportEntity r = QReportEntity.reportEntity;
 
         QReportEntity r2 = new QReportEntity("r2");
+
+
 
         LocalDateTime startDateTime = command.reportDateUnit().toLocalDateTime();
         LocalDateTime endDateTime = LocalDateTime.now();
@@ -64,29 +86,23 @@ public class ReportStatisticsQueryDslRepositoryImpl implements ReportStatisticsR
                                         ).multiply(100)));
 
 
-        return queryFactory.select(Projections.constructor(FindAllStatisticsResult.class, r.reportType, percentage))
+        return queryFactory.select(Projections.constructor(FindAllReportStatisticsResult.class, r.reportType, percentage))
                 .from(r)
                 .where(mainCondition)
                 .groupBy(r.reportType)
                 .fetch();
 
 
-
     }
 
-    private BooleanExpression findAllStatisticsCondition(FindAllStatisticsCommand command, QReportEntity q, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-
-        return q.reportStatus.ne(ReportStatus.CANCELLED)
-                .and(q.createdDateTime.between(startDateTime, endDateTime))
-                .and(hasBoardType(command.boardType(), q)
-                );
-
-
+    @Override
+    public Page<FindAllReportStatisticsResult> findAllStatisticsByCommandWithOffsetAndLimit(FindAllReportStatisticsCommand command) {
+        return null;
     }
 
-    private BooleanExpression hasBoardType(@Nullable BoardType boardType, QReportEntity q) {
-
-        return boardType != null ? q.boardType.eq(boardType) : null;
+    @Override
+    public Class<FindAllReportStatisticsCommand> commandType() {
+        return FindAllReportStatisticsCommand.class;
     }
 
 

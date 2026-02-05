@@ -1,8 +1,8 @@
-package com.portfolio.aips.project.visitor.domain.vo;
+package com.portfolio.aips.project.visitor.domain.repo.vo;
 
 import com.portfolio.aips.project.visitor.domain.entity.VisitorEntity;
 
-public record VisitorStatisticsVO(Long totalVisitor) {
+public record SaveVO(Long totalVisitor) {
 
     public VisitorEntity toEntity() {
 
