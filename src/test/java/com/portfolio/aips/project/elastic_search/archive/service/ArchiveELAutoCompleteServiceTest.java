@@ -56,7 +56,7 @@ class ArchiveELAutoCompleteServiceTest {
 
         
 
-        List<String> result = archiveELAutoCompleteService.autocomplete("책상 서");
+        List<String> result = archiveELAutoCompleteService.autocomplete("책상");
 
 
 

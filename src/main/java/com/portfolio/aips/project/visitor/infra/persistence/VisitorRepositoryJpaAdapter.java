@@ -8,7 +8,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @RequiredArgsConstructor
-public class VisitorJpaRepositoryImpl implements VisitorRepository {
+public class VisitorRepositoryJpaAdapter implements VisitorRepository {
 
     private final VisitorJpaRepository visitorJpaRepository;
 

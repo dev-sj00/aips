@@ -42,8 +42,6 @@ public class InviteServiceImpl implements InviteService {
 
         }
 
-
-
         inviteUserListRepository.saveAll(inviteUserListEntities);
     }
 

@@ -40,6 +40,7 @@ public class FavoriteInviteFriendServiceImpl implements FavoriteInviteFriendServ
     public void addFavoriteFriend(AddFavoriteFriendCommand command) {
         try {
             QFavoriteInviteFriendEntity qFavFriend = QFavoriteInviteFriendEntity.favoriteInviteFriendEntity;
+
             Long currentFavInviteCount = Optional.ofNullable(
                     queryFactory.select(qFavFriend.count())
                             .from(qFavFriend)
