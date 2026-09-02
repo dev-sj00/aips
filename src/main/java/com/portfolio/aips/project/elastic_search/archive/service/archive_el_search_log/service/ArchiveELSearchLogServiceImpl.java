@@ -6,8 +6,7 @@ import co.elastic.clients.elasticsearch.indices.AnalyzeResponse;
 import co.elastic.clients.elasticsearch.indices.analyze.AnalyzeToken;
 import com.portfolio.aips.project.elastic_search.archive.dto.ArchiveSearchLogDocument;
 import com.portfolio.aips.project.elastic_search.archive.service.archive_el.ArchiveELService;
-import com.portfolio.aips.project.elastic_search.service.ESIndexService;
-import com.portfolio.aips.project.users.entity.QUsersEntity;
+
 import com.portfolio.aips.project.users.service.user.UserService;
 import com.portfolio.aips.project.utils.DateUtils;
 import com.querydsl.jpa.impl.JPAQueryFactory;

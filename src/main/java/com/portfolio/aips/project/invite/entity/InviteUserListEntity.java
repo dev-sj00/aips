@@ -1,6 +1,5 @@
 package com.portfolio.aips.project.invite.entity;
 
-import com.portfolio.aips.project.users.entity.UsersEntity;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;

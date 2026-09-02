@@ -27,31 +27,36 @@ class ArchiveELAutoCompleteServiceTest {
 
     @Test
     void getAutoComplete() throws URISyntaxException, IOException {
-        ArchiveDocument archiveDocument = new ArchiveDocument();
+        archiveELService.save(
+                ArchiveDocument.builder()
+                        .title("abc")
+                        .description("abc")
+                        .popularityScore(1.0)
+                        .tags(List.of("abc review", "abc good"))
+                        .build()
+        );
 
-        archiveDocument.setTitle("abc");
-        archiveDocument.setDescription("abc");
-        archiveDocument.setPopularityScore(1L);
-        archiveDocument.setTags(List.of("abc review", "abc good"));
-        archiveELService.save(archiveDocument);
+        archiveELService.save(
+                ArchiveDocument.builder()
+                        .title("abc2")
+                        .description("fgvwefewfw2")
+                        .popularityScore(1.0)
+                        .tags(List.of("책상", "abc abc"))
+                        .build()
+        );
 
-        archiveDocument.setTitle("abc2");
-        archiveDocument.setDescription("fgvwefewfw2");
-        archiveDocument.setPopularityScore(1L);
-        archiveDocument.setTags(List.of("책상", "abc abc"));
-
-        archiveELService.save(archiveDocument);
-
-
-        archiveDocument.setTitle("qw32");
-        archiveDocument.setDescription("fgvwefewfw");
-        archiveDocument.setPopularityScore(1L);
-        archiveDocument.setTags(List.of("책상 서랍", "32"));
-        archiveELService.save(archiveDocument);
+        archiveELService.save(
+                ArchiveDocument.builder()
+                        .title("qw32")
+                        .description("fgvwefewfw")
+                        .popularityScore(1.0)
+                        .tags(List.of("책상 서랍", "32"))
+                        .build()
+        );
 
         
 
-        List<String> result = archiveELAutoCompleteService.autocomplete("책상 서");
+        List<String> result = archiveELAutoCompleteService.autocomplete("책상");
 
 
 

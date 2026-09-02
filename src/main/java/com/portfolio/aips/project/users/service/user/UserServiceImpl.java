@@ -1,12 +1,10 @@
 package com.portfolio.aips.project.users.service.user;
 
-import com.portfolio.aips.project.users.entity.QUsersEntity;
 import com.portfolio.aips.project.users.entity.UsersEntity;
+import com.portfolio.aips.project.users.entity.QUsersEntity;
 import com.portfolio.aips.project.users.entity.RefreshTokenEntity;
-import com.portfolio.aips.project.social.dto.SaveSocialRefreshTokenInfoRequestDTO;
 import com.portfolio.aips.project.social.dto.SaveSocialUserInfoRequestDTO;
 import com.portfolio.aips.project.users.enums.UserRole;
-import com.portfolio.aips.project.users.repo.RefreshTokenRepository;
 import com.portfolio.aips.project.users.repo.UsersRepository;
 
 import com.portfolio.aips.project.utils.JwtUtils;

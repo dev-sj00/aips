@@ -37,51 +37,55 @@ class ArchiveELSearchServiceTest {
         OffsetDateTime baseTime = OffsetDateTime.now(ZoneOffset.UTC);
 
         List<ArchiveDocument> testDocuments = List.of(
-                new ArchiveDocument() {{
-                    setTitle("spring msa config server");
-                    setDescription("ABC");
-                    setPopularityScore(1L);
-                    setTags(List.of("kafka", "graphql"));
-                    setLlmType("chatgpt");
-                    setCreatedDateTime(baseTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-                    setTopic("IT");
-                }},
-                new ArchiveDocument() {{
-                    setTitle("spring cloud gateway example");
-                    setDescription("Gateway tutorial for microservices");
-                    setPopularityScore(2L);
-                    setTags(List.of("spring", "gateway"));
-                    setLlmType("gpt-4");
-                    setCreatedDateTime(baseTime.minusMinutes(10).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-                    setTopic("IT");
-                }},
-                new ArchiveDocument() {{
-                    setTitle("react frontend integration");
-                    setDescription("Frontend integration with Spring Boot API");
-                    setPopularityScore(3L);
-                    setTags(List.of("react", "frontend"));
-                    setLlmType("chatgpt");
-                    setCreatedDateTime(baseTime.plusMinutes(2).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-                    setTopic("Web");
-                }},
-                new ArchiveDocument() {{
-                    setTitle("kafka message streaming");
-                    setDescription("Streaming messages with Kafka topics");
-                    setPopularityScore(4L);
-                    setTags(List.of("kafka", "streaming"));
-                    setLlmType("gpt-4");
-                    setCreatedDateTime(baseTime.plusMinutes(3).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-                    setTopic("IT");
-                }},
-                new ArchiveDocument() {{
-                    setTitle("graphql api design");
-                    setDescription("Designing GraphQL APIs for microservices");
-                    setPopularityScore(5L);
-                    setTags(List.of("graphql", "api"));
-                    setLlmType("chatgpt");
-                    setCreatedDateTime(baseTime.plusMinutes(4).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
-                    setTopic("IT");
-                }}
+                ArchiveDocument.builder()
+                        .title("spring msa config server")
+                        .description("ABC")
+                        .popularityScore(1.0)
+                        .tags(List.of("kafka", "graphql"))
+                        .llmType("chatgpt")
+                        .createdDateTime(baseTime.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                        .topic("IT")
+                        .build(),
+
+                ArchiveDocument.builder()
+                        .title("spring cloud gateway example")
+                        .description("Gateway tutorial for microservices")
+                        .popularityScore(2.0)
+                        .tags(List.of("spring", "gateway"))
+                        .llmType("gpt-4")
+                        .createdDateTime(baseTime.minusMinutes(10).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                        .topic("IT")
+                        .build(),
+
+                ArchiveDocument.builder()
+                        .title("react frontend integration")
+                        .description("Frontend integration with Spring Boot API")
+                        .popularityScore(3.0)
+                        .tags(List.of("react", "frontend"))
+                        .llmType("chatgpt")
+                        .createdDateTime(baseTime.plusMinutes(2).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                        .topic("Web")
+                        .build(),
+
+                ArchiveDocument.builder()
+                        .title("kafka message streaming")
+                        .description("Streaming messages with Kafka topics")
+                        .popularityScore(4.0)
+                        .tags(List.of("kafka", "streaming"))
+                        .llmType("gpt-4")
+                        .createdDateTime(baseTime.plusMinutes(3).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                        .topic("IT")
+                        .build(),
+
+                ArchiveDocument.builder()
+                        .title("graphql api design")
+                        .description("Designing GraphQL APIs for microservices")
+                        .popularityScore(5.0)
+                        .tags(List.of("graphql", "api"))
+                        .llmType("chatgpt")
+                        .createdDateTime(baseTime.plusMinutes(4).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME))
+                        .topic("IT")
+                        .build()
         );
 
         // 저장

@@ -1,18 +1,30 @@
-version: '3.8'
-
 services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-aips
+    environment:
+      POSTGRES_DB: aips
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
     container_name: elasticsearch
     environment:
       - node.name=es-node
       - cluster.name=es-cluster
-      - discovery.type=single-node   # 단일 노드 클러스터
+      - discovery.type=single-node
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"       # JVM 메모리 4GB
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
       - xpack.security.enabled=false
-      - xpack.security.http.ssl.enabled=false  # TLS 비활성화
-      - ELASTIC_PASSWORD='1234'
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=1234
     ulimits:
       memlock:
         soft: -1
@@ -21,8 +33,8 @@ services:
       - esdata:/usr/share/elasticsearch/data
       - ./src/main/resources/elastic/nori:/usr/share/elasticsearch/config/nori
     ports:
-      - "9200:9200"  # HTTP
-      - "9300:9300"  # Transport
+      - "9200:9200"
+      - "9300:9300"
     networks:
       - esnet
     command: >
@@ -46,7 +58,6 @@ services:
     container_name: kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      # 인증 없음
       - SERVER_HOST=0.0.0.0
     ports:
       - "5601:5601"
@@ -63,6 +74,7 @@ volumes:
   esdata:
     driver: local
   redis_data:
+  postgres_data:
 
 networks:
   esnet:

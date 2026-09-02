@@ -17,6 +17,7 @@ public class InvitePolicyServiceImpl implements InvitePolicyService{
 
    private final JPAQueryFactory queryFactory;
    private final InvitePolicyRepository invitePolicyRepository;
+
     @Override
     @Cacheable(value = "invitePolicyCache", key = "#inviteType")
     public InvitePolicyEntity findInvitePolicyByInviteType(InviteType inviteType) {

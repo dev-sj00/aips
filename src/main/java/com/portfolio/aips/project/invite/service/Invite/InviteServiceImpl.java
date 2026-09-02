@@ -3,8 +3,6 @@ package com.portfolio.aips.project.invite.service.Invite;
 import com.portfolio.aips.project.exception.CustomException;
 import com.portfolio.aips.project.exception.ErrorCode;
 import com.portfolio.aips.project.invite.entity.*;
-import com.portfolio.aips.project.invite.enums.InviteType;
-import com.portfolio.aips.project.invite.repo.InviteHistoryRepository;
 import com.portfolio.aips.project.invite.repo.InviteSearchUserRepository;
 import com.portfolio.aips.project.invite.repo.InviteUserListRepository;
 import com.portfolio.aips.project.invite.service.Invite.command.FindInviteUserInfoCommand;
@@ -12,7 +10,6 @@ import com.portfolio.aips.project.invite.service.Invite.command.SaveAllCommand;
 import com.portfolio.aips.project.invite.service.InviteHistory.InviteHistoryService;
 import com.portfolio.aips.project.invite.service.InviteHistory.command.AddInviteHistoryAndTrimOldestCommand;
 import com.portfolio.aips.project.users.entity.UsersEntity;
-import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -44,8 +41,6 @@ public class InviteServiceImpl implements InviteService {
             inviteUserListEntities.add(inviteUserListEntity);
 
         }
-
-
 
         inviteUserListRepository.saveAll(inviteUserListEntities);
     }
